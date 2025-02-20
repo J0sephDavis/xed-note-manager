@@ -162,15 +162,12 @@ def PrintFileInfo(file:Gio.FileInfo):
 	
 # TODO parse yaml, checkout other python project to see how I went about it.
 def ProcessFile(file:Gio.File):
-	# TODO definite bug. If there were yaml at 1025 characters in length (including the before & after document markers)
-	# the second marker (---) would be split.
-	# We don't handle this edge case atm.
-	array_req_len = 20#1024; # TODO make configurable?
+	array_request_len = 64 # See TODO 8
 	
 	# Gio.FileInputStream
 	localFileInputStream = file.read() # retrieve first three chatacters (if type is not 'md', if it is an 'md', might as well make a greedy grab)
 
-	byte_array:GLib.Bytes = localFileInputStream.read_bytes(array_req_len);
+	byte_array:GLib.Bytes = localFileInputStream.read_bytes(array_request_len);
 	if byte_array is None: return
 
 	condition:bool = byte_array is not None and byte_array.get_size() > 0
@@ -186,7 +183,7 @@ def ProcessFile(file:Gio.File):
 		print(f'{DEBUG_PREFIX} yaml start and end found in first grab')
 		yaml_array = array[:array.rfind(b'---')];
 		print(f'{DEBUG_PREFIX} array:{array}')
-		# TODO find second --- and split the starray
+		# TODO find second --- and split the starray (TODO 7)
 	else:
 
 		all_bytes:List[bytes] = []
@@ -194,7 +191,7 @@ def ProcessFile(file:Gio.File):
 		# TODO YAML
 		while(True):
 			# TODO read a maximum number of bytes to prevent us from accidentally reading malformed and large files
-			byte_array = localFileInputStream.read_bytes(array_req_len);
+			byte_array = localFileInputStream.read_bytes(array_request_len);
 			if byte_array is None or byte_array.get_size() == 0:
 				break;
 			array:bytes = byte_array.get_data();
@@ -248,3 +245,5 @@ def ProcessFile(file:Gio.File):
 # TODO 7 - (bug) when reading yaml, we read the byte arrays and search for the substring b'---'; however,
 #		we do not cover the edge case of the substring being split between subsequent reads. e.g., read 1 ends in "\n--"
 #		read 2 begins with "-\n".
+# TODO 8 - When processing yaml, make the bytes_read configureable by the user? Maybe they're running on a device with very little ram
+#		or they know better than us about  how much data they wish to read at once..
