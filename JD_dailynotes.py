@@ -10,21 +10,14 @@ from gi.repository import GLib
 from os import getenv # to get users home directory? May not be needed if we just make the path in the config?
 from typing import List
 import yaml
+
+# look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
 		<menu name="ToolsMenu" action="Tools">
 			<placeholder name="ToolsOps_2">
-				<menuitem name="JDPlugin" action="JDPlugin"/>
-			</placeholder>
-		</menu>
-	</menubar>
-</ui>"""
-# look for xed-ui.xml in the xed proj
-tools_ui_string = """<ui>
-	<menubar name="MenuBar">
-		<menu name="ToolsMenu" action="Tools">
-			<placeholder name="ToolsOps_2">
-				<menuitem name="JDPluginToolOp3" action="JDPlugin_Tool"/>
+				<menuitem name="JDPlugin" action="JDPlugin_ClearDocument_Action"/>
+				<menuitem name="JDPluginToolOp3" action="JDPlugin_SearchYaml_Action"/>
 			</placeholder>
 		</menu>
 	</menubar>
@@ -58,15 +51,14 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable):
 		self._action_group = Gtk.ActionGroup("JDPluginActions")
 		self._action_group.add_actions(
 			[
-				("JDPlugin",None, _("Clear Document"),
+				("JDPlugin_ClearDocument_Action",None, _("Clear Document"),
 				None, _("Clear the document"),
 				self.on_clear_document_activate),
-				("JDPlugin_Tool",None,_("Open BF4 Note"),
+				("JDPlugin_SearchYaml_Action",None,_("Open BF4 Note"),
 	 			None, _("BF4 Search YAML"), self.DO_SearchNotes),
 			])
 		manager.insert_action_group(self._action_group, -1)
 		self._ui_id = manager.add_ui_from_string(menubar_ui_string)
-		self._ui_id = manager.add_ui_from_string(tools_ui_string)
 	
  	#remove installed menu items
 	def _remove_menu(self):
