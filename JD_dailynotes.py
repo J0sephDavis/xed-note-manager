@@ -1,7 +1,3 @@
-# save files to: ~/.local/share/xed/plugins
-
-# Tutorial for Gedit3 https://wiki.gnome.org/Apps/Gedit/PythonPluginHowTo
-# supposedly Xed is similar
 DEBUG_PREFIX=r'JD_DEBUG '
 import gi
 gi.require_version('Peas', '1.0')
@@ -241,12 +237,14 @@ def ProcessFile(file:Gio.File):
 # G4 - PyGObject Asynchronous programming guide (callbacks/asyncio): https://pygobject.gnome.org/guide/asynchronous.html#asynchronous-programming-with-callbacks
 # G5 - Where can I find the Python bindings for GIO's GSocket?: https://stackoverflow.com/questions/4677807/where-can-i-find-the-python-bindings-for-gios-gsocket
 # G6 - GIO tutorial: File operations: https://sjohannes.wordpress.com/2009/10/10/gio-tutorial-file-operations/#comment-58
-
+# G7 -  Tutorial for Gedit3 https://wiki.gnome.org/Apps/Gedit/PythonPluginHowTo
 # OTHER
 # O1 - libyaml (C): https://github.com/yaml/libyaml/
 
 # BUILDING
-# remember, copy paste the workspace files into ~/.local/share/xed/plugins for it to be available anywhere
+# Plugins must be placed in:
+# ~/.local/share/xed/plugins
+# then gdb xed; run
 
 # TODOs (indexed by written order, not priority)
 # TODO 1 - rewrite in C (once we get to a comfortable point. Or deep dive into how performance is affected by using the python loader)
