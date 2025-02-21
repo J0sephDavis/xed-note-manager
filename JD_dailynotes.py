@@ -1,17 +1,17 @@
 DEBUG_PREFIX=r'JD_DEBUG '
-from JD_yaml_dialog import *;
 import gi
 gi.require_version('PeasGtk', '1.0')
 from gi.repository import PeasGtk
-#gi.require_version('Xed', '3.0')
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
+from gi.repository import GLib
 from os import getenv # to get users home directory? May not be needed if we just make the path in the config?
-from typing import List
-import yaml
+
+from JD_yaml_dialog import *
 from JD__entities import *
 from JD__main_config import JDPluginConfig
+
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -56,7 +56,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def do_update_state(self): #from WindowActivatable
 		# window has been updated, such as active tab changed
 		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
-		self._action_group.set_sensitive(self.window.get_active_document() != None)
+		# self._action_group.set_sensitive(self.window.get_active_document() != None)
 
 	def do_create_configure_widget(self): # from PeasGtk.Configurable
 		return self.pluginConfig.createConfigureWidget();

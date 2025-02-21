@@ -10,7 +10,6 @@ class JDPluginConfig():
 		self._loadConfig()
 
 	def GetLibraryPath(self): # TODO support multiple paths
-		# return f'{self.user_home_dir}/Documents/Notes'
 		return self.yaml['notes_directory']
 
 	def _loadConfig(self):
