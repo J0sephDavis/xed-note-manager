@@ -12,6 +12,10 @@ class JDPluginConfig():
 		self.yaml = None
 		self._loadConfig()
 
+	def GetLibraryPath(self): # TODO support multiple paths
+		# return f'{self.user_home_dir}/Documents/Notes'
+		return self.yaml['notes_directory']
+
 	def _loadConfig(self):
 		print(f'{DEBUG_PREFIX} Loading configuration file ({self.path})')
 		file:Gio.File = getFileFromPath(self.path)
