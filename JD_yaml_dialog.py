@@ -1,7 +1,7 @@
 from JD_dailynotes import DEBUG_PREFIX
 
 import gi;
-from gi.repository import Gtk;
+from gi.repository import Gtk, Gio;
 # https://python-gtk-3-tutorial.readthedocs.io/en/latest/dialogs.html
 class JDPlugin_Dialog_1(Gtk.Window): 
 	def __init__(self, current_search, provided_callback):
@@ -27,6 +27,76 @@ class JDPlugin_Dialog_1(Gtk.Window):
 		print(f'{DEBUG_PREFIX} closing dialog. ')
 		self.callback(self.entry.get_text())
 		self.destroy()
+
+class JDPlugin_FileInformation_Window(Gtk.Window):
+	def __init__(self, fInfo:Gio.FileInfo):
+		super().__init__(title=f'File Information: {fInfo.get_name()}')
+		self.set_default_size(256,128)
+		self.fileInfo = fInfo;
+		# table H
+		self.table = Gtk.Box(spacing=6, orientation=Gtk.Orientation.HORIZONTAL)
+		#colV 1 colV 2
+		self.col_labels = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+		self.col_values = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+
+		self._AddName()
+		self._AddFileType()
+		self._AddSize()
+		self._AddCanRead()
+		self._AddModifiedTime()
+		self._AddContentType()
+		
+		self.table.pack_start(self.col_labels,True,True,0)
+		self.table.pack_start(self.col_values,True,True,0)
+		self.add(self.table)
+		self.show_all()
+		
+	def _AddLabel(self, text:str):
+		self.col_labels.pack_start(Gtk.Label(label=text),True,True,0)
+	def _AddValue(self, text:str):
+		self.col_values.pack_start(Gtk.Label(label=text),True,True,0)
+	
+	def _AddName(self):
+		name = self.fileInfo.get_name()
+		self._AddLabel("Name")
+		self._AddValue(name)
+	def _AddSize(self):
+		size = self.fileInfo.get_size().__str__()
+		self._AddLabel("Size")
+		self._AddValue(size.__str__())
+	def _AddCanRead(self):
+		canRead = self.fileInfo.get_attribute_boolean(r'access::can_read').__str__()
+		self._AddLabel("Can Read?")
+		self._AddValue(canRead)
+	def _AddModifiedTime(self):
+		time = self.fileInfo.get_modification_date_time().format_iso8601()
+		self._AddLabel("Modified")
+		self._AddValue(time)
+	def _AddContentType(self):
+		contentType = self.fileInfo.get_content_type()
+		self._AddLabel("Content Type")
+		self._AddValue(contentType)
+	def _AddFileType(self):
+		fType = self.fileInfo.get_file_type().value_name
+		self._AddLabel("File Type")
+		self._AddValue(fType)
+
+		
+def PrintFileInfo(file:Gio.FileInfo):
+	name = file.get_name()
+	file_type:Gio.FileType = file.get_file_type() #https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType
+	modification_datetime_str = file.get_modification_date_time().format_iso8601() # TODO configureable datetime format
+	size:int = file.get_size()
+	can_read:bool = file.get_attribute_boolean(r'access::can_read')
+	content_type:str = file.get_content_type()
+	
+	print(f'{DEBUG_PREFIX} list {file.list_attributes(None)}')
+	print(f'{DEBUG_PREFIX} Name {name}')
+	print(f'{DEBUG_PREFIX} Type {file_type}')
+	print(f'{DEBUG_PREFIX} Time Modified (iso8601) {modification_datetime_str}')
+	print(f'{DEBUG_PREFIX} Size {size} bytes')
+	print(f'{DEBUG_PREFIX} can_read {can_read}')
+	print(f'{DEBUG_PREFIX} content_type {content_type}')
 
 # class JDPlugin_Dialog_WithText(Gtk.Window):
 # 	def __init__(self, filename:str, yaml_data):
