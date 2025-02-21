@@ -46,6 +46,11 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self._remove_menu()
 		self._action_group = None
 
+	def do_update_state(self): #from WindowActivatable
+		# window has been updated, such as active tab changed
+		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
+		self._action_group.set_sensitive(self.window.get_active_document() != None)
+
 	def do_create_configure_widget(self): # from PeasGtk.Configurable
 		widget_vbox = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 		# --------------
@@ -89,15 +94,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		manager.remove_action_group(self._action_group)
 		manager.ensure_update()
 
-	def do_update_state(self): #from WindowActivatable
-		# window has been updated, such as active tab changed
-		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
-		self._action_group.set_sensitive(self.window.get_active_document() != None)
-
 	def DO_spawn_dialog(self,action):
-		# doc=self.window.get_active_document()
-		# if not doc: return
-		# doc.set_text('')
 		win = JDPlugin_Dialog_1(self.search_str, self.dialog_callback)
 		win.show();
 
