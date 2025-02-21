@@ -25,7 +25,7 @@ menubar_ui_string = """<ui>
 	</menubar>
 </ui>"""
 
-class JDPlugin(GObject.Object, Xed.WindowActivatable):
+class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
 	__gtype_name__ = "JDPlugin"
 
 	window = GObject.property(type=Xed.Window)
@@ -45,6 +45,27 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable):
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
 		self._remove_menu()
 		self._action_group = None
+
+	def do_create_configure_widget(self): # from PeasGtk.Configurable
+		widget_vbox = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+		# --------------
+		row_notes_dir = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
+		notes_dir_file_browser = Gtk.Label(label="TODO") # spawn a text entry with a button for FileChooserDialog? 
+		# ------
+		row_notes_dir.pack_start(Gtk.Label(label="notes_dir"),True,True,0)
+		row_notes_dir.pack_start(notes_dir_file_browser,True,True,0)
+		# --------------
+		row_file_regex = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
+		file_regex_entry = Gtk.Entry()
+		# ------
+		row_file_regex.pack_start(Gtk.Label(label="the regex string used to determine what files to check the yaml of"),True,True,0)
+		row_file_regex.pack_start(file_regex_entry,True,True,0)
+		# --------------
+		widget_vbox.pack_start(row_notes_dir,True,True,0)
+		widget_vbox.pack_start(row_file_regex,True,True,0)
+		# --------------
+		# save a config in the users config dir... unless there is a better place.
+		return widget_vbox;
 
 	#install menu items
 	def _insert_menu(self):
