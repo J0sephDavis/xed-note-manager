@@ -83,3 +83,19 @@ def PrintFileAttributeData(file_attributes, attribute_key):
 	#  TODO check status invalid
 	print(f'{DEBUG_PREFIX} typeof value {type(value_pp)}');
 	return (value_pp, file_attribute_type);
+
+def PrintFileInfo(file:Gio.FileInfo):
+	name = file.get_name()
+	file_type:Gio.FileType = file.get_file_type() #https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType
+	modification_datetime_str = file.get_modification_date_time().format_iso8601() # TODO configureable datetime format
+	size:int = file.get_size()
+	can_read:bool = file.get_attribute_boolean(r'access::can_read')
+	content_type:str = file.get_content_type()
+	
+	print(f'{DEBUG_PREFIX} list {file.list_attributes(None)}')
+	print(f'{DEBUG_PREFIX} Name {name}')
+	print(f'{DEBUG_PREFIX} Type {file_type}')
+	print(f'{DEBUG_PREFIX} Time Modified (iso8601) {modification_datetime_str}')
+	print(f'{DEBUG_PREFIX} Size {size} bytes')
+	print(f'{DEBUG_PREFIX} can_read {can_read}')
+	print(f'{DEBUG_PREFIX} content_type {content_type}')
