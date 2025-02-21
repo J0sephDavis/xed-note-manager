@@ -22,8 +22,9 @@ def readYAML(file_path:str) -> object: # TODO perform YAML safe load here
 	file:Gio.File = getFileFromPath(file_path)
 	if file is None:
 		print(f'{DEBUG_PREFIX} readYAML 404, file not found... {file_path}')
-	print(f'{DEBUG_PREFIX} readYAML from: {file}')
-	yaml_str:str|None
+		return None
+	print(f'{DEBUG_PREFIX} readYAML from: {file_path}')
+	yaml_buff:str|None = None
 	
 	inputStream = file.read()
 	#---- file stream opened
