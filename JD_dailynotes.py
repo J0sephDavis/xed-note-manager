@@ -10,7 +10,8 @@ from gi.repository import Xed
 from os import getenv # to get users home directory? May not be needed if we just make the path in the config?
 from typing import List
 import yaml
-from JD__main_config import JDPluginConfig, JD_EntBase, JD_EntLibrary, JD_EntNote;
+from JD__entities import *
+from JD__main_config import JDPluginConfig
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -84,11 +85,11 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self._action_group = Gtk.ActionGroup("JDPluginActions")
 		self._action_group.add_actions(
 			[
-				("JDPlugin_SpawnDialog_Action",None, _("Set YAML substring match"),
-				None, _("choose the substring to look for when parsing notes"),
+				("JDPlugin_SpawnDialog_Action",None, _("Set YAML substring match"), # type: ignore
+				None, _("choose the substring to look for when parsing notes"), # type: ignore
 				self.DO_spawn_dialog),
-				("JDPlugin_SearchYaml_Action",None,_("Search YAML"),
-	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes),
+				("JDPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
+	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
 			])
 		manager.insert_action_group(self._action_group, -1)
 		self._ui_id = manager.add_ui_from_string(menubar_ui_string)
@@ -107,6 +108,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def dialog_callback(self, text):
 		print(f'{DEBUG_PREFIX} dialog_callback received: {text}')
 		self.search_str = text;
+		self.pluginConfig.saveConfig()
 
 	def DO_SearchNotes(self,action):
 		search = self.search_str
