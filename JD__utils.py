@@ -56,19 +56,15 @@ def readYAML(file_path:str) -> object: # TODO perform YAML safe load here
 				valid = True
 				break
 		if (valid):
-			yaml_str:str = b''.join(buffer)
-			yaml_str = yaml_str[:yaml_str.rfind(b'---')] # remove all text at the end of the doc. (including the second ---)
-			print(f'{DEBUG_PREFIX} yaml buffered: {yaml_str}')
+			yaml_buff:bytes = b''.join(buffer)
+			yaml_buff = yaml_buff[:yaml_buff.rfind(b'---')] # remove all text at the end of the doc. (including the second ---)
+			print(f'{DEBUG_PREFIX} yaml buffered: {yaml_buff}')
 	#---- file stream closed
 	inputStream.close()
-	if yaml_str is None:
+	if yaml_buff is None:
 		print(f'{DEBUG_PREFIX} no yaml_str.')
 		return None
-	return yaml.safe_load(yaml_str)
-
-def writeYAML(file_path:str, yaml_str:str) -> bool:
-	file = getFileFromPath(file);
-	return False;
+	return yaml.safe_load(yaml_buff)
 
 def getFileFromPath(file_path:str) -> Gio.File:
 	print(f'{DEBUG_PREFIX} get file from: {file_path}')
