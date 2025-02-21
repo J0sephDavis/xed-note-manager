@@ -39,6 +39,7 @@ def readYAML(file_path:str) -> object: # TODO perform YAML safe load here
 	
 	if data.count(b'---') > 1:
 		print(f'{DEBUG_PREFIX} yaml complete in first draw. Tenho 天和')
+		yaml_buff = data[:data.rfind(b'---')]
 	else: # continue reading yaml to complete
 		buffer:List[bytes] = [data]
 		valid:bool = False;
