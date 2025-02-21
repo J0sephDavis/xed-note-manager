@@ -1,7 +1,8 @@
 DEBUG_PREFIX=r'JD_DEBUG '
 from JD_yaml_dialog import *;
 import gi
-gi.require_version('Peas', '1.0')
+gi.require_version('PeasGtk', '1.0')
+from gi.repository import PeasGtk
 #gi.require_version('Xed', '3.0')
 from gi.repository import GObject
 from gi.repository import Gtk
