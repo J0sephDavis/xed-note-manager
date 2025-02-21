@@ -90,7 +90,6 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def dialog_callback(self, text):
 		print(f'{DEBUG_PREFIX} dialog_callback received: {text}')
 		self.search_str = text;
-		self.pluginConfig.saveConfig()
 
 	def DO_SearchNotes(self,action):
 		search = self.search_str

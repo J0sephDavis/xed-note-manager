@@ -25,7 +25,7 @@ class JDPluginConfig():
 			"notes_directory" : f'{self.user_home_dir}/Documents/Notes',
 		}
 
-	def saveConfig(self):
+	def saveConfig(self,action=None):
 		print(f'{DEBUG_PREFIX} saveConfig:\n{self.yaml}\n{self.yaml.__str__()}')
 		file:Gio.File = getFileFromPath(self.path)
 		if (file.query_exists()):
@@ -39,9 +39,11 @@ class JDPluginConfig():
 		widget_vbox = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 		# --------------
 		row_notes_dir = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
+		notes_dir_path_label = Gtk.Label(label=self.GetLibraryPath())
 		notes_dir_file_browser = Gtk.Label(label="TODO") # spawn a text entry with a button for FileChooserDialog? 
 		# ------
 		row_notes_dir.pack_start(Gtk.Label(label="notes_dir"),True,True,0)
+		row_notes_dir.pack_start(notes_dir_path_label,True,True,0)
 		row_notes_dir.pack_start(notes_dir_file_browser,True,True,0)
 		# --------------
 		row_file_regex = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
@@ -50,8 +52,13 @@ class JDPluginConfig():
 		row_file_regex.pack_start(Gtk.Label(label="the regex string used to determine what files to check the yaml of"),True,True,0)
 		row_file_regex.pack_start(file_regex_entry,True,True,0)
 		# --------------
+		# TODO save on close instead of with this button? the close button comes default... maybe get signal of widget being destroyed?
+		save_button = Gtk.Button.new_with_label("Save")
+		save_button.connect("clicked",self.saveConfig)
+		# --------------
 		widget_vbox.pack_start(row_notes_dir,True,True,0)
 		widget_vbox.pack_start(row_file_regex,True,True,0)
+		widget_vbox.pack_start(save_button,True,True,0)
 		# --------------
 		# TODO button with callback connected to saveConfig
 		return widget_vbox
