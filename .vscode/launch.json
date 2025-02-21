@@ -1,0 +1,16 @@
+{
+	"configurations": [
+	{
+		"name": "debug",
+		"request": "launch",
+		"type": "cppdbg",
+		"program": "/usr/bin/gdb",
+		"cwd": "${workspaceFolder}",
+		"args": ["--quiet", "/usr/bin/xed"],
+		"stopAtEntry": false,
+		"environment": [],
+		"externalConsole": false,
+		"preLaunchTask": "make build"
+	}
+	]
+}
