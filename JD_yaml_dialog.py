@@ -1,6 +1,4 @@
 from JD_dailynotes import DEBUG_PREFIX
-
-import gi;
 from gi.repository import Gtk, Gio;
 # https://python-gtk-3-tutorial.readthedocs.io/en/latest/dialogs.html
 class JDPlugin_Dialog_1(Gtk.Window): 

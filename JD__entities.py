@@ -1,5 +1,6 @@
 from gi.repository import Gio;
 from JD__utils import *
+
 class JD_EntBase():
 	def __init__(self, fileInfo:Gio.FileInfo):
 		self.filename = fileInfo.get_name()
@@ -43,7 +44,7 @@ class JD_EntLibrary(JD_EntBase):
 		self.notes:List[JD_EntNote] = []
 		self._get_notes()
 		# self.regex_filter = None
-	
+
 	def GetNotes(self):
 		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
 		return self.notes;
@@ -64,11 +65,11 @@ class JD_EntLibrary(JD_EntBase):
 		
 		notes = library.enumerate_children(
 			search_attributes,
-			Gio.FileQueryInfoFlags.NONE, # https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
+			# https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
+			Gio.FileQueryInfoFlags.NONE,
 			None
 		)
 		for note in notes:
-			# PrintFileAttributeData(note)
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
 				self.notes.append(JD_EntNote(self.path, note))
