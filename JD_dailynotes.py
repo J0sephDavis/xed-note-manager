@@ -7,12 +7,10 @@ from gi.repository import PeasGtk
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
-from gi.repository import Gio
-from gi.repository import GLib
 from os import getenv # to get users home directory? May not be needed if we just make the path in the config?
 from typing import List
 import yaml
-
+from JD__main_config import JDPluginConfig, JD_EntBase, JD_EntLibrary, JD_EntNote;
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -29,13 +27,21 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	__gtype_name__ = "JDPlugin"
 
 	window = GObject.property(type=Xed.Window)
-
 	def __init__(self):
+		print(f"{DEBUG_PREFIX}plugin init")
 		GObject.Object.__init__(self)
-		print(f"{DEBUG_PREFIX}plugin init");
-		self.user_home_dir = getenv("HOME");
-		print(f'{DEBUG_PREFIX} INIT: user_home_dir: {self.user_home_dir}');
-		self.search_str = '';
+		
+		self.user_home_dir = getenv(r'HOME')
+		user_config_dir = getenv(r'XDG_CONFIG_HOME')
+		if (user_config_dir is None): user_config_dir = f'{self.user_home_dir}/.config/'
+
+		self.pluginConfig = JDPluginConfig(user_config_dir)		
+		self.search_str = 'name'
+		
+		print(f'{DEBUG_PREFIX} INIT: user_home_dir: {self.user_home_dir}')
+		print(f'{DEBUG_PREFIX} INIT: user_config_dir: {user_config_dir}')
+		self.library = JD_EntLibrary(self.pluginConfig.GetLibraryPath())
+
 
 	def do_activate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
@@ -104,141 +110,21 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 
 	def DO_SearchNotes(self,action):
 		search = self.search_str
-		# The what we want to know about the file.
-		# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
-		# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
-		search_attributes = ",".join([
-			r'standard::name',
-			r'standard::content-type',
-			r'standard::type',
-			r'standard::size',
-			r'time::modified',
-			r'access::can_read',
-		]);
-		# TODO: configureable
-		notes_directory = Gio.File.new_for_path(f'{self.user_home_dir}/Documents/Notes');
-		#! Gio.FileEnumerator
-		notes = notes_directory.enumerate_children(
-			search_attributes,
-			Gio.FileQueryInfoFlags.NONE, # https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags
-			None)
-		#! fileinfo in 
-		print(f'{DEBUG_PREFIX} typeof notes {type(notes)}')
-		for note in notes:
-			# maybe make a plugin based around the idea:
-			# - creates notes formatted with datefrmstr, like %Y-%m-%d
-			# - create markdown files
-			# - allow search by yaml, just go through every file no bullshit no databse maybe a cache tho
-			# - given a search open a bunch of files.. or maybe make a tab?
-			print(f'{DEBUG_PREFIX}NOTE: {note.get_name()}',end='')
-			if note.get_file_type() == Gio.FileType.DIRECTORY:
-				print(f'| DIRECTORY');
-			elif note.get_file_type() == Gio.FileType.REGULAR:
-				print(f'| FILE')
-				PrintFileInfo(note);
-				# ValueError: Pointer arguments are restricted to integers, capsules, and None. See: https://bugzilla.gnome.org/show_bug.cgi?id=683599
-				# TODO check if this really leaks memory or if they die with the note obj / garbage collector
-				# GLib.free(modification_datetime_string)
-				note_file = notes_directory.get_child(note.get_name())
-				if ProcessFile(self.search_str, note_file):
-					self.window.create_tab_from_location(note_file,None,0,0,True);
-			else: print("")
-		#! TODO docs say to unref, but.... maybe handlded by whatevers doing the binding? I need to find out7
-		#! RuntimeException
-		# GObject.Object.unref(notes);
-		# --------
-		# file_bf4 = Gio.File.new_for_path(f'{self.user_home_dir}/Desktop/bf4-eanote.txt')
-		# self.window.create_tab_from_location(
-		# 	file_bf4, None,
-		# 	0,0,True)
-		return
+		for note in self.library.GetNotes():
+			print(f'{DEBUG_PREFIX} NOTE: {note.filename}')
+			if SearchNoteYaml(search, note):
+				# JDPlugin_FileInformation_Window(note)
+				note.open_in_new_tab(self.window)
 
-def GetFileAttributeData(file_attributes, attribute_key):
-	(has_value, file_attribute_type, value_pp, file_attribute_status)\
-		= file_attributes.get_attribute_data(attribute_key)
-	if (has_value == False)\
-		or (file_attribute_type is None)\
-		or (value_pp is None)\
-		or (file_attribute_status is None):
-		return (None, None);
-	print(f'{DEBUG_PREFIX} value type (enum): {file_attribute_type}')
-	print(f'{DEBUG_PREFIX} status(enum): {file_attribute_status}')
-	#  TODO check status invalid
-	print(f'{DEBUG_PREFIX} typeof value {type(value_pp)}');
-	return (value_pp, file_attribute_type);
-		
-def PrintFileInfo(file:Gio.FileInfo):
-	name = file.get_name()
-	file_type:Gio.FileType = file.get_file_type() #https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType
-	modification_datetime_str = file.get_modification_date_time().format_iso8601() # TODO configureable datetime format
-	size:int = file.get_size()
-	can_read:bool = file.get_attribute_boolean(r'access::can_read')
-	content_type:str = file.get_content_type()
-	
-	print(f'{DEBUG_PREFIX} list {file.list_attributes(None)}')
-	print(f'{DEBUG_PREFIX} Name {name}')
-	print(f'{DEBUG_PREFIX} Type {file_type}')
-	print(f'{DEBUG_PREFIX} Time Modified (iso8601) {modification_datetime_str}')
-	print(f'{DEBUG_PREFIX} Size {size} bytes')
-	print(f'{DEBUG_PREFIX} can_read {can_read}')
-	if (content_type is not None):
-		print(f'{DEBUG_PREFIX} content_type {content_type}')
-		print(f'{DEBUG_PREFIX} content type seen!')
-	
-# TODO parse yaml, checkout other python project to see how I went about it.
-def ProcessFile(search_str, file:Gio.File) -> bool: # true-> yaml matched!
-	found_match:bool = False;
-	array_request_len = 64 # See TODO 8
-	
-	# Gio.FileInputStream
-	localFileInputStream = file.read() # retrieve first three chatacters (if type is not 'md', if it is an 'md', might as well make a greedy grab)
-
-	byte_array:GLib.Bytes = localFileInputStream.read_bytes(array_request_len);
-	if byte_array is None: return
-
-	condition:bool = byte_array is not None and byte_array.get_size() > 0
-	if (condition == False): return
-
-	array:bytes = byte_array.get_data();
-	yaml_array:bytes|None = None;
-	if (array.startswith(b'---') == False): # TODO handle encoding cases. I imagine this would not work with mandarin text. might come out as '- - - ' in ascii
-		print(f'{DEBUG_PREFIX} not yaml {array}')
-		return
-	print(f'{DEBUG_PREFIX} count {array.count(b'---')} {array}')
-	if (array.count(b'---') > 1):
-		print(f'{DEBUG_PREFIX} yaml start and end found in first grab')
-		yaml_array = array[:array.rfind(b'---')];
-		print(f'{DEBUG_PREFIX} array:{array}')
-		# TODO find second --- and split the starray (TODO 7)
-	else:
-		all_bytes:List[bytes] = []
-		all_bytes.append(array);
-		# TODO YAML
-		while(True):
-			# TODO read a maximum number of bytes to prevent us from accidentally reading malformed and large files
-			byte_array = localFileInputStream.read_bytes(array_request_len);
-			if byte_array is None or byte_array.get_size() == 0:
-				break;
-			array:bytes = byte_array.get_data();
-			all_bytes.append(array)
-			print(f'{DEBUG_PREFIX} ADD LINE: {array} | find rv: {array.find(b'---')}')
-			if (array.find(b'---') > 0): break;
-		yaml_array = b''.join(all_bytes)
-		yaml_array = yaml_array[:yaml_array.rfind(b'---')]
-	
-	print(f'{DEBUG_PREFIX} yaml_array:{yaml_array}')
-	if yaml_array is not None:
-		# TODO try-except here. we are a bit lazy after the while loop and kinda just make a yaml_array by
-		# reading the file until EOF. 
-		loaded_yaml = yaml.safe_load(yaml_array)
-		print(f'{DEBUG_PREFIX} yaml type: {type(loaded_yaml)}\nYAML:\t{loaded_yaml}')
-		# JDPlugin_Dialog_WithText('tmpname',loaded_yaml.__str__())
-		if len(search_str)>1 and yaml_array.find(bytearray(search_str, encoding='utf-8')) != -1:
-			print(f'{DEBUG_PREFIX} substring matched!\nsearch:{search_str}\nyaml:{yaml_array}')
-			found_match = True
-
-	localFileInputStream.close();
-	return found_match
+def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
+	print(f'{DEBUG_PREFIX} processing note: {note.filename}')
+	yaml = note.get_yaml()
+	if yaml is None:
+		print(f'{DEBUG_PREFIX} note contains NO yaml')
+		return False
+	yaml_str = yaml.__str__()
+	print(f'{DEBUG_PREFIX} note yaml: {yaml_str}')
+	return yaml_str.find(search_str) >= 0;
 
 # EXTERNAL DOCS
 # E1 - PyGObject / 'gi': https://amolenaar.pages.gitlab.gnome.org/pygobject-docs/
@@ -279,3 +165,4 @@ def ProcessFile(search_str, file:Gio.File) -> bool: # true-> yaml matched!
 # TODO 8 [ ] When processing yaml, make the bytes_read configureable by the user? Maybe they're running on a device with very little ram
 #		or they know better than us about  how much data they wish to read at once..
 # TODO 9 [ ] Configureable regex for filenames. If non provided, just accept all files. Otherwise, compile a regex string and just check that a match exists.
+# TODO 10 [ ] Save user configuration......
