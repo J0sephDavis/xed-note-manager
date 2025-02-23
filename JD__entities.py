@@ -1,4 +1,5 @@
 from gi.repository import Gio;
+from gi.repository import Xed
 from JD__utils import *
 class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a getModel() command?
 	# File
@@ -20,12 +21,13 @@ class JD_EntNote(JD_EntBase):
 		super().__init__(getFileFromPath(self.path))
 		
 		self.file_read:bool = False # True ONLY if readYAML has been called already.
-		self.fileInfo = fileInfo
-		self.__yaml = None# = readYAML(fileInfo.get_name())
+		self.__yaml = None
 		
-	def open_in_new_tab(self, window): # window is the main Xed window
+	def open_in_new_tab(self, window:Xed.Window): # window is the main Xed window
+		# TODO, If window is already open, focus tab instead of opening a new one.
+		# Make configurable? Or accelerator defined, like ctrl+activate opens regardless.
 		window.create_tab_from_location(
-			getFileFromPath(self.path),
+			self.file,
 			None,0,0,True
 		)
 	
