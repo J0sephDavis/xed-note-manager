@@ -7,36 +7,38 @@ class JDPluginConfig():
 
 	def __init__(self, config_file_path:str):
 		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
-		self.path = config_file_path + 'xed_JDplugin.conf'
-		self.widget = None
-		self.yaml = None
-		self.libraries = []
+		self.path:str = config_file_path + 'xed_JDplugin.conf'
+		self.widget:Gtk.Widget = None
+		self.__yaml:object = None
+		self.libraries:List[str] = []
 		self._loadConfig()
 
 	def GetLibraries(self) -> List[str]: # TODO support multiple paths
-		return self.yaml['notes_directories']
+		return self.__yaml['notes_directories']
 
 	def _loadConfig(self):
-		self.yaml = None
+		self.__yaml = None
 		print(f'{DEBUG_PREFIX} Loading configuration file ({self.path})')
 		file:Gio.File = getFileFromPath(self.path)
-		if (file.query_exists()): self.yaml = readYAML(self.path)
-		if self.yaml is None:
+		if (file.query_exists()): self.__yaml = readYAML(self.path)
+		if self.__yaml is None:
 			print(f'{DEBUG_PREFIX} config does not exist. Creating')
-			self.yaml = {
+			self.__yaml = {
 			"notes_directories" : [f'{self.user_home_dir}/Documents/Notes'],
 			}
 			return
 		# ---
-		print(f'{DEBUG_PREFIX} config:  {type(self.yaml)}\n{self.yaml}')
+		print(f'{DEBUG_PREFIX} config:  {type(self.__yaml)}\n{self.__yaml}')
 		# ---
 		# self.libraries = []
-		for dir in self.yaml["notes_directories"]:
+		for dir in self.__yaml["notes_directories"]:
 			print(f'{DEBUG_PREFIX} loadConfig, append dir: {dir}')
 			self.libraries.append(dir)
 
 	def saveConfig(self,action=None):
-		print(f'{DEBUG_PREFIX} saveConfig:\n{self.yaml}')
+		old_libraries = self.libraries
+		
+		print(f'{DEBUG_PREFIX} saveConfig:\n{self.__yaml}')
 		file:Gio.File = getFileFromPath(self.path)
 		if (file.query_exists()):
 			file.delete()
@@ -46,9 +48,9 @@ class JDPluginConfig():
 		for line in buff_text:
 			print(f'{DEBUG_PREFIX} saveConfig, append dir {line}')
 			self.libraries.append(line)
-		self.yaml['notes_directories'] = self.libraries
+		self.__yaml['notes_directories'] = self.libraries
 		outputStream:Gio.FileOutputStream = file.create(Gio.FileCreateFlags.REPLACE_DESTINATION, None)
-		yaml_bytes = bytearray(yaml.dump(self.yaml, explicit_start=True,explicit_end=False) + '---', encoding='utf-8')
+		yaml_bytes = bytearray(yaml.dump(self.__yaml, explicit_start=True,explicit_end=False) + '---', encoding='utf-8')
 		outputStream.write_all(yaml_bytes)
 		outputStream.close()
 
@@ -58,7 +60,7 @@ class JDPluginConfig():
 		# row_notes_dir = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
 		# notes_dir_path_label = Gtk.Label(label=self.GetLibraryPath())
 		self.libraryPaths_GtkTextView = Gtk.TextView()
-		text = self.yaml['notes_directories']
+		text = self.__yaml['notes_directories']
 		if text is None:
 			text = ''
 		else:
