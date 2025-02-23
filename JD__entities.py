@@ -38,23 +38,19 @@ class JD_EntNote(JD_EntBase):
 		return self.__yaml
 
 class JD_EntLibrary(JD_EntBase):
-	# static & instance regex filters. Then should they be A||B, A&&B, A+B, or even A-B
-	# regex_filter = None # TODO set from JDPluginConfig
 	def __init__(self, library_path:str):
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
 		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
 		super().__init__(file=library)
 		self.notes:List[JD_EntNote] = []
-		self._get_notes()
-		# self.regex_filter = None
+		self._get_notes(library)
 
 	def GetNotes(self):
 		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
 		return self.notes;
 
-	def _get_notes(self):
-		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
+	def _get_notes(self, library:Gio.File):
 		# PrintFileAttributeData(library)
 		# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
 		# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
@@ -77,6 +73,3 @@ class JD_EntLibrary(JD_EntBase):
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
 				self.notes.append(JD_EntNote(self.path, note))
-
-	# def setFilter(self, regex_str):
-	# 	self.regex_filter = re.compile(regex_str)
