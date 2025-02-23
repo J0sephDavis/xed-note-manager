@@ -11,7 +11,7 @@ from os import getenv # to get users home directory? May not be needed if we jus
 from JD_yaml_dialog import *
 from JD__entities import *
 from JD__main_config import JDPluginConfig
-
+from JD_sidepanel import *
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -33,21 +33,31 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		GObject.Object.__init__(self)
 		
 		self.user_home_dir = getenv(r'HOME')
+
+		self.search_str = 'name'
 		user_config_dir = getenv(r'XDG_CONFIG_HOME')
 		if (user_config_dir is None): user_config_dir = f'{self.user_home_dir}/.config/'
-
-		self.pluginConfig = JDPluginConfig(user_config_dir)		
-		self.search_str = 'name'
-		
+		self.pluginConfig = JDPluginConfig(user_config_dir)
+		self.libraries:List[JD_EntLibrary] = []
 		print(f'{DEBUG_PREFIX} INIT: user_home_dir: {self.user_home_dir}')
-		print(f'{DEBUG_PREFIX} INIT: user_config_dir: {user_config_dir}')
-		self.library = JD_EntLibrary(self.pluginConfig.GetLibraryPath())
 
 
 	def do_activate(self): #from WindowActivatable
-		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
 		self._insert_menu()
-	
+
+		self.panel_manager = JDSidePanelManager(self.window.get_side_panel())
+		
+		main_tab = JDPanelTab(self.window)
+		self.panel_manager.addTab(main_tab)
+		
+		for library_path in self.pluginConfig.GetLibraries():
+			print(f'{DEBUG_PREFIX} library_path: {library_path}')
+			library =  JD_EntLibrary(library_path)
+			main_tab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
+			self.libraries.append(library)
+			
+		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
+
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
 		self._remove_menu()
