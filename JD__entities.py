@@ -1,22 +1,24 @@
 from gi.repository import Gio;
 from JD__utils import *
+class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a getModel() command?
+	# File
+	# File Name
+	# Display Name
+	# Sort Name?
 
-class JD_EntBase():
-	def __init__(self, fileInfo:Gio.FileInfo):
-		self.filename = fileInfo.get_name()
-	# 	self.SortName = filename
-	# 	self.DisplayName = filename
-
-	# def SetDisplayName(self, name:str):
-	# 	self.DisplayName = name
+	def __init__(self, file:Gio.File):
+		self.file = file;
 	
-	# def SetSortName(self, name:str):
-	# 	self.SortName = name
+	def getFilename(self): return self.file.get_basename()
+
 
 class JD_EntNote(JD_EntBase):
 	def __init__(self, parent_dir:str, fileInfo:Gio.FileInfo):
-		super().__init__(fileInfo)
+		self.fileInfo = fileInfo
 		self.path = f'{parent_dir}/{fileInfo.get_name()}'
+
+		super().__init__(getFileFromPath(self.path))
+		
 		self.file_read:bool = False # True ONLY if readYAML has been called already.
 		self.fileInfo = fileInfo
 		self.__yaml = None# = readYAML(fileInfo.get_name())
@@ -41,6 +43,8 @@ class JD_EntLibrary(JD_EntBase):
 	def __init__(self, library_path:str):
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
+		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
+		super().__init__(file=library)
 		self.notes:List[JD_EntNote] = []
 		self._get_notes()
 		# self.regex_filter = None
