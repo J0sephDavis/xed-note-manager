@@ -46,17 +46,46 @@ class JDPanelTab(Gtk.TreeView):
 		# https://lazka.github.io/pgi-docs/Gtk-3.0/classes/TreeView.html#signals
 		self.handlers.append(self.treeView.connect("row-activated", self.handler_row_activated, window))
 
-
 	def handler_row_activated(self, treeview, path, col, window):
 		count_selection = treeview.get_selection().count_selected_rows()
-		if count_selection > 1: return
 		print(f'{DEBUG_PREFIX} !!!row-ativated:\n\tpath{path}\n\tselection-size:{count_selection}')
+		if count_selection > 1: return
 		model = treeview.get_model()
 		iter:Gtk.TreeIter = model.get_iter(path)
 		model[iter][1].open_in_new_tab(window)
-		# iter:Gtk.TreeIter = self.treeStore.get_iter(path)
+	
+	def handler_remove_selected(self, button): # this could probably be moved to JDSidePanelManager because it does not need to rely on instance data (which could be passed as args)
+		print(f'{DEBUG_PREFIX} handler_remove_selected')
+		selection:Gtk.TreeSelection = self.treeView.get_selection()
+		selection_mode = selection.get_mode()
 
-	def getWidget(self): return self.treeView
+		if (selection_mode != Gtk.SelectionMode.SINGLE and selection_mode != Gtk.SelectionMode.BROWSE):
+			print(f'{DEBUG_PREFIX} handler_remove_selected get_selected() only supports single selection or browse selection. Use get_selected_rows()\n{selection_mode}')
+			return
+		
+		model,selected_iter = selection.get_selected()
+		entry = model[selected_iter]
+		if (selected_iter is None):
+			print(f'{DEBUG_PREFIX} handler_remove_selected, no entries selected.')
+			return
+		print(f'{DEBUG_PREFIX} {type(entry)} SELECTED[0] {entry[0]} [1]: {entry[1]}')
+		if (type(entry[1]) is JD_EntLibrary):
+			print(f'{DEBUG_PREFIX} removing library {entry[0]}')
+			self.treeStore.remove(selected_iter)
+		else:
+			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
+			return
+
+	def getWidget(self):
+		widget_box = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+		remove_item_button = Gtk.Button(label="Remove Selected")
+		remove_item_button.connect("clicked", self.handler_remove_selected)
+		widget_box.pack_start(remove_item_button,False,True,5)
+		widget_box.pack_start(self.treeView,True,True,0)
+
+		widget_box.show_all() # Some widgets are hidden by default. Supposedly ALL are, but the TreeView is evidently made visible when it alone is returned. but using a container it is hidden...
+		return widget_box # self.treeView
+
 	def getStore(self): return self.treeStore
 	# TODO name+icon should be instance vars
 	def getName(self): return "namegoeshere"
@@ -78,4 +107,3 @@ class JDSidePanelManager():
 	def addTab(self, panelTab:JDPanelTab):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
 		self.side_panel.add_item(panelTab.getWidget(), panelTab.getName(), panelTab.getIcon())
-
