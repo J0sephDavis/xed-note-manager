@@ -47,19 +47,30 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 
 		self.panel_manager = JDSidePanelManager(self.window.get_side_panel())
 		
-		main_tab = JDPanelTab(self.window)
-		self.panel_manager.addTab(main_tab)
+		self.main_tab = JDPanelTab(self.window)
+		self.panel_manager.addTab(self.main_tab)
 		
 		for library_path in self.pluginConfig.GetLibraries():
 			print(f'{DEBUG_PREFIX} library_path: {library_path}')
 			library =  JD_EntLibrary(library_path)
-			main_tab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
+			self.main_tab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
 			self.libraries.append(library)
-			
+
+		self.pluginConfig.SubscribeLibraryAdded(self.config_LibraryAdded)
+		self.pluginConfig.SubscribeLibraryRemoved(self.config_LibraryRemoved)
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
+
+	def config_LibraryAdded(self,library_path:str):
+		print(f'{DEBUG_PREFIX} (event) LIBRARY ADDED. {library_path}')
+		self.main_tab.addLibrary(JD_EntLibrary(library_path))
+
+	def config_LibraryRemoved(self,library_path:str):
+		print(f'{DEBUG_PREFIX} (event) LIBRARY REMOVED. {library_path}')
+		self.main_tab.removeLibrary(library_path)
 
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
+		print(f'{DEBUG_PREFIX} TODO: remove side panel') # TODO remove side panel
 		self._remove_menu()
 		self._action_group = None
 
