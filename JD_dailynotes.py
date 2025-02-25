@@ -32,6 +32,11 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	panel_manager:JDSidePanelManager = None
 
 	def __init__(self):
+		# the plugin config class must be created during __init__ or else,
+		# the plugin configuration widget cannot be retrieved.
+		# This is because the preferences menu creates an entirely new instance of JDPlugin which
+		# but it does not call do_activate.
+
 		print(f"{DEBUG_PREFIX}plugin init")
 		GObject.Object.__init__(self)
 		
@@ -48,14 +53,15 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self.libraries:List[JD_EntLibrary] = [] # TODO VESTIGIAL, remove ASAP
 		if self.entTracker is None:
 			self.entTracker = JD_EntTracker()
+		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
+		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
+		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
 		# Side Panel
 		if self.panel_manager is None:
 			self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.entTracker)
 		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
 		self.panel_manager.addTab(main_tab)	
 
-		# self.pluginConfig.SubscribeLibraryAdded(self.config_LibraryAdded)
-		# self.pluginConfig.SubscribeLibraryRemoved(self.config_LibraryRemoved)
 		self._insert_menu()
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
 
