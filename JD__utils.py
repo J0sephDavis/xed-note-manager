@@ -11,10 +11,10 @@ def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:
 	except GLib.Error as error: # byte_array is set None on failure
 		print(f'{DEBUG_PREFIX} utils.__getLine err code: {error.code}\nmsg: {error.message}')
 	
-	if (byte_array is not None):
-		return byte_array.get_data()
-	else:
+	if (byte_array is None or byte_array.get_size() == 0):
 		return None
+	else:
+		return byte_array.get_data()
 	
 
 def readYAML(file_path:str) -> object: # TODO perform YAML safe load here
