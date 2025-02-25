@@ -59,14 +59,6 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self._insert_menu()
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
 
-	def config_LibraryAdded(self,library_path:str):
-		print(f'{DEBUG_PREFIX} (event) LIBRARY ADDED. {library_path}')
-		self.main_tab.addLibrary(JD_EntLibrary(library_path))
-
-	def config_LibraryRemoved(self,library_path:str):
-		print(f'{DEBUG_PREFIX} (event) LIBRARY REMOVED. {library_path}')
-		self.main_tab.removeLibrary(library_path)
-
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
 		self._remove_menu()
@@ -78,6 +70,21 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self.entTracker.deactivate()
 		self.entTracker = None
 
+	# def config_LibraryAdded(self,library_path:str):
+	# 	print(f'{DEBUG_PREFIX} (event) LIBRARY ADDED. {library_path}')
+	# 	main_tab = self.panel_manager.getTab('main')
+	# 	if main_tab is None:
+	# 		print(f'{DEBUG_PREFIX} main_tab does not exist')
+	# 		return
+	# 	main_tab.addLibrary(JD_EntLibrary(library_path))
+
+	# def config_LibraryRemoved(self,library_path:str):
+	# 	print(f'{DEBUG_PREFIX} (event) LIBRARY REMOVED. {library_path}')
+	# 	main_tab = self.panel_manager.getTab('main')
+	# 	if main_tab is None:
+	# 		print(f'{DEBUG_PREFIX} main_tab does not exist')
+	# 		return
+	# 	main_tab.removeLibrary(library_path)
 
 	def do_update_state(self): #from WindowActivatable
 		# window has been updated, such as active tab changed
