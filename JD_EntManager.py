@@ -21,6 +21,12 @@ class JD_EntTracker(): # TODO better name
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
 	def GetNotes(self): return self.notes_weak
+	def AddLibraries(self, library_paths:List[str]):
+		# this is called during JDPlugin.on_activate()
+		# the config class exists prior to the entity tracker, thus the callbacks
+		# do not exist to handle the added libraries.
+		for path in library_paths:
+			self.libraryAddedCallback(path)
 # ------------------------------ callbacks -------------------------------------
 	def libraryAddedCallback(self, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryAddedCallback: {library_path}')
@@ -40,20 +46,20 @@ class JD_EntTracker(): # TODO better name
 # --------------------------------- events ----------------------------------------
 	def announceLibraryRemoved(self, library:JD_EntLibrary):
 		for callback in self.subscribers_library_removed:
-			callback(library)
+			callback()(library)
 	
 	def announceLibraryAdded(self,library:JD_EntLibrary):
 		for callback in self.subscribers_library_added:
-			callback(library)
+			callback()(library)
 
 	def subscribeLibraryAdded(self, callback): 
 		if not callable(callback):
 			print(f'{DEBUG_PREFIX} subscribeLibraryAdded, callback is not callable.')
 			return
-		self.subscribers_library_added.append(weakref.ref(callback))
+		self.subscribers_library_added.append(weakref.WeakMethod(callback))
 
 	def subscribeLibraryRemoved(self, callback): 
 		if not callable(callback):
 			print(f'{DEBUG_PREFIX} subscribeLibraryRemoved, callback is not callable.')
 			return
-		self.subscribers_library_removed.append(weakref.ref(callback))
+		self.subscribers_library_removed.append(weakref.WeakMethod(callback))
