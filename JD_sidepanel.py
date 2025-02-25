@@ -34,7 +34,6 @@ class JDPanelTab(Gtk.TreeView):
 		super().__init__()
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
 		# self.library_nodes:List[Tuple[JD_EntLibrary,Gtk.TreeIter]] = [] # str:library name
-		self.handlers:List[int] = []
 		# COLUMNS: filename,
 		self.treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
 		self.treeView:Gtk.TreeView = Gtk.TreeView(model=self.treeStore)
@@ -44,7 +43,7 @@ class JDPanelTab(Gtk.TreeView):
 			position=-1
 		)
 		# https://lazka.github.io/pgi-docs/Gtk-3.0/classes/TreeView.html#signals
-		self.handlers.append(self.treeView.connect("row-activated", self.handler_row_activated, window))
+		self.treeView.connect("row-activated", self.handler_row_activated, window)
 
 	def handler_row_activated(self, treeview, path, col, window):
 		count_selection = treeview.get_selection().count_selected_rows()
@@ -98,8 +97,19 @@ class JDPanelTab(Gtk.TreeView):
 
 		for note in library.notes:
 			self.treeStore.append(node, [note.getFilename(), note])
+	
+	def removeLibrary(self,library_path:str):
+		print(f'{DEBUG_PREFIX} PanelTab removeLibrary(library_path={library_path})')
+		if library_path is None: return
+		removal:List[Gtk.TreeIter] = []
+		for node in self.treeStore:
+			if node[1].path == library_path:
+				print(f'{DEBUG_PREFIX} library iter found,')
+				removal.append(node.iter)
+		for node in removal:
+			self.treeStore.remove(node)
 
-class JDSidePanelManager():
+class JDSidePanelManager(): # This was not really thought out. This shoudl be turned into a function in the utils.py file. Doesn't do much
 	def __init__(self, panel:Xed.Panel):
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 		self.side_panel = panel
