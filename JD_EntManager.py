@@ -36,7 +36,10 @@ class JD_EntTracker(): # TODO better name
 
 	def libraryRemovedCallback(self, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryRemovedCallback: {library_path}')
-		removal:List[JD_EntLibrary] = self.libraries.filter(lambda library: library.path == library_path)
+		removal:List[JD_EntLibrary] = [] #self.libraries.filter(lambda library: library.path == library_path)
+		for library in self.libraries:
+			if (library.path == library_path):
+				removal.append(library)
 		print(f'{DEBUG_PREFIX} REMOVAL[]: {removal}')
 		for library in removal:
 			self.libraries.remove(library)
