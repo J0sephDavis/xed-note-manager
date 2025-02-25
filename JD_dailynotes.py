@@ -157,10 +157,8 @@ def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
 # then gdb xed; run
 
 # TODOs (indexed by written order, not priority)
-# TODO 1 [ ] rewrite in C (once we get to a comfortable point. Or deep dive into how performance is affected by using the python loader)
 # TODO 2 [ ] keep track of yaml we have already seen in some searchable datastruct
 # TODO 3 [ ] Provide key-value pairs, possibly with regex to let users wildcard match for some value
-# TODO 4 [x] popup dialogue box with search bar
 # TODO 5 [ ] Show results in the file browser on the left (maybe or own list instead of the one provided by the ifle browser plugin)
 # TODO 6 [ ] asynchronous file searching + support for cancelling. (See G4 and process_files method)
 # TODO 7 [ ] (bug) when reading yaml, we read the byte arrays and search for the substring b'---'; however,
@@ -169,4 +167,3 @@ def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
 # TODO 8 [ ] When processing yaml, make the bytes_read configureable by the user? Maybe they're running on a device with very little ram
 #		or they know better than us about  how much data they wish to read at once..
 # TODO 9 [ ] Configureable regex for filenames. If non provided, just accept all files. Otherwise, compile a regex string and just check that a match exists.
-# TODO 10 [ ] Save user configuration......

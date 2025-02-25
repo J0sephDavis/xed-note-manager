@@ -7,19 +7,12 @@ from gi.repository import GLib
 from JD__entities import *
 from JD__utils import DEBUG_PREFIX
 from typing import List
-# Considerations
-# - how to preserve the JD_EntNode relationship so they can be opened?
-# - do we have to clean any of this up? Or is it fine to just let it die with the process?
-# Functional TODO
-# - Get the TreeIter under the cursor
-# - Track the last two TreeIter selected
-# - if Iter A & B are the same, open the file / act on it
+
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
 # Aesthetic TODO
 # - folder and file icons like the filebrowser sidepanel
-
 # common interfaces for side panel tabs
 # - getName()
 # - getIcon()
@@ -117,3 +110,8 @@ class JDSidePanelManager(): # This was not really thought out. This shoudl be tu
 	def addTab(self, panelTab:JDPanelTab):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
 		self.side_panel.add_item(panelTab.getWidget(), panelTab.getName(), panelTab.getIcon())
+	
+	def deactivate(self):
+		# remove added widgets from sidepanel
+		pass
+		
