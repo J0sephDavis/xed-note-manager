@@ -80,48 +80,56 @@ class JDPanelTab(Gtk.TreeView):
 			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
 			return
 
-	def getWidget(self):
-		widget_box = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
-		remove_item_button = Gtk.Button(label="Remove Selected")
-		remove_item_button.connect("clicked", self.handler_remove_selected)
-		widget_box.pack_start(remove_item_button,False,True,5)
-		widget_box.pack_start(self.treeView,True,True,0)
-
-		widget_box.show_all() # Some widgets are hidden by default. Supposedly ALL are, but the TreeView is evidently made visible when it alone is returned. but using a container it is hidden...
-		return widget_box # self.treeView
-
-	def getStore(self): return self.treeStore
-	# TODO name+icon should be instance vars
-	def getName(self): return "namegoeshere"
-	def getIcon(self): return "folder" # this is from the users icon theme. lookup some more
-
 	def addLibrary(self, library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab addLibrary')
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.getFilename(), note])
+
+	def onLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
+		self.addLibrary(library)
 	
-	def removeLibrary(self,library_path:str):
-		print(f'{DEBUG_PREFIX} PanelTab removeLibrary(library_path={library_path})')
-		if library_path is None: return
+	def onLibraryRemoved(self,library:JD_EntLibrary):
+		print(f'{DEBUG_PREFIX} onLibraryRemoved')
 		removal:List[Gtk.TreeIter] = []
-		for node in self.treeStore:
-			if node[1].path == library_path:
-				print(f'{DEBUG_PREFIX} library iter found,')
+		model:Gtk.TreeStore = self.treeView.get_model()
+		for node in model:
+			if node[1] == library:
 				removal.append(node.iter)
 		for node in removal:
-			self.treeStore.remove(node)
+			model.remove(iter)
 
-class JDSidePanelManager(): # This was not really thought out. This shoudl be turned into a function in the utils.py file. Doesn't do much
-	def __init__(self, panel:Xed.Panel):
+class JDSidePanelManager():
+	side_panel:Xed.Panel = None
+	panels:List[JDPanelTab] = []
+	entityTracker:JD_EntTracker = None
+
+	def __init__(self, panel:Xed.Panel, entityTracker:JD_EntTracker):
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 		self.side_panel = panel
-	
+		self.entityTracker = entityTracker
+
 	def addTab(self, panelTab:JDPanelTab):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
-		self.side_panel.add_item(panelTab.getWidget(), panelTab.getName(), panelTab.getIcon())
-	
+		self.side_panel.add_item(panelTab.GetWidget(), panelTab.display_name, panelTab.icon_name)
+		self.entityTracker.subscribeLibraryAdded(panelTab.onLibraryAdded)
+		self.entityTracker.subscribeLibraryRemoved(panelTab.onLibraryRemoved)
+		# add libraries
+		for library_path in self.pluginConfig.GetLibraries():
+			print(f'{DEBUG_PREFIX} library_path: {library_path}')
+			library =  JD_EntLibrary(library_path)
+			panelTab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
+			self.libraries.append(library)
+
+	def getTab(self, tab_name:str):
+		return self.panels[tab_name]
+
 	def deactivate(self):
-		# remove added widgets from sidepanel
-		pass
-		
+		print(f'{DEBUG_PREFIX} JDSidePanelManager.deactivate()')
+		# TODO, should the TreeStores be explicitly set to None? 
+		for panel in self.panels:
+			print(f'{DEBUG_PREFIX} removing panel {panel.internal_name}')
+			self.side_panel.remove_item(panel.GetWidget())
+			panel.treeView.get_model().clear() # Is this necessary? Or will it be destroyed when we clear the widget.
+			panel.widget = None
+		self.side_panel = None
