@@ -4,17 +4,18 @@ import os
 
 class JDPluginConfig():
 	user_home_dir = os.getenv('HOME')
+	library_added_callbacks = []
+	library_removed_callbacks = []
+	libraries:List[str] = []
 
 	def __init__(self, config_file_path:str):
 		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
 		self.path:str = config_file_path + 'xed_JDplugin.conf'
-		self.widget:Gtk.Widget = None
+		self.widget:Gtk.Widget = None # TODO this should be made into a class variable. Then make a method for updating the fields
 		self.__yaml:object = None
-		self.libraries:List[str] = []
 		self._loadConfig()
 
-	def GetLibraries(self) -> List[str]: # TODO support multiple paths
-		return self.__yaml['notes_directories']
+	def GetLibraries(self) -> List[str]: return self.__yaml['notes_directories']
 
 	def _loadConfig(self):
 		self.__yaml = None
