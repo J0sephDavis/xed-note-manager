@@ -80,14 +80,11 @@ class JDPanelTab(Gtk.TreeView):
 			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
 			return
 
-	def addLibrary(self, library:JD_EntLibrary):
+	def onLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab addLibrary')
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.getFilename(), note])
-
-	def onLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
-		self.addLibrary(library)
 	
 	def onLibraryRemoved(self,library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} onLibraryRemoved')
@@ -115,11 +112,8 @@ class JDSidePanelManager():
 		self.entityTracker.subscribeLibraryAdded(panelTab.onLibraryAdded)
 		self.entityTracker.subscribeLibraryRemoved(panelTab.onLibraryRemoved)
 		# add libraries
-		for library_path in self.pluginConfig.GetLibraries():
-			print(f'{DEBUG_PREFIX} library_path: {library_path}')
-			library =  JD_EntLibrary(library_path)
-			panelTab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
-			self.libraries.append(library)
+		for library in self.entityTracker.GetLibraries():
+			panelTab.onLibraryAdded(library) # TODO this will become for library in config.libraries addLibrary(lib).
 
 	def getTab(self, tab_name:str):
 		return self.panels[tab_name]
