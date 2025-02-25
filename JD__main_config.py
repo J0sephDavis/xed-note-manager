@@ -50,8 +50,9 @@ class JDPluginConfig():
 		for cb in self.library_removed_callbacks:
 			cb(library_path)
 
-	def saveConfig(self,action=None):
+	def saveConfig(self,action):
 		old_libraries = self.libraries
+		self.libraries = []
 		
 		print(f'{DEBUG_PREFIX} saveConfig:\n{self.__yaml}')
 		file:Gio.File = getFileFromPath(self.path)
@@ -59,11 +60,21 @@ class JDPluginConfig():
 			file.delete()
 		buffer = self.libraryPaths_GtkTextView.get_buffer()
 		buff_text:List[str] = buffer.get_text(buffer.get_start_iter(),buffer.get_end_iter(),False).splitlines()
-		self.libraries = []
+		# notify subscribes about new libraries
 		for line in buff_text:
-			print(f'{DEBUG_PREFIX} saveConfig, append dir {line}')
 			self.libraries.append(line)
+			if line not in old_libraries:
+				print(f'{DEBUG_PREFIX} new library {line}')
+				self.EmitLibraryAdded(line)
+		# find paths that were removed from the configuration
+		for library in old_libraries:
+			if library not in self.libraries:
+				print(f'{DEBUG_PREFIX} library removed: {library}')
+				self.EmitLibraryRemoved(library)
+		print(f'{DEBUG_PREFIX} old_libraries:\ts{old_libraries}')
+		print(f'{DEBUG_PREFIX} libraries:\t{self.libraries}')
 		self.__yaml['notes_directories'] = self.libraries
+
 		outputStream:Gio.FileOutputStream = file.create(Gio.FileCreateFlags.REPLACE_DESTINATION, None)
 		yaml_bytes = bytearray(yaml.dump(self.__yaml, explicit_start=True,explicit_end=False) + '---', encoding='utf-8')
 		outputStream.write_all(yaml_bytes)
