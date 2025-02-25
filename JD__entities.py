@@ -1,6 +1,7 @@
 from gi.repository import Gio;
 from gi.repository import Xed
 from JD__utils import *
+
 class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a getModel() command?
 	# File
 	# File Name

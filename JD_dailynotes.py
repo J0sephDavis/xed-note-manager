@@ -12,6 +12,7 @@ from JD_yaml_dialog import *
 from JD__entities import *
 from JD__main_config import JDPluginConfig
 from JD_sidepanel import *
+from JD_EntManager import JD_EntTracker
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -26,8 +27,10 @@ menubar_ui_string = """<ui>
 
 class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
 	__gtype_name__ = "JDPlugin"
-
 	window = GObject.property(type=Xed.Window)
+	entTracker:JD_EntTracker = None
+	panel_manager:JDSidePanelManager = None
+
 	def __init__(self):
 		print(f"{DEBUG_PREFIX}plugin init")
 		GObject.Object.__init__(self)
@@ -38,26 +41,22 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		user_config_dir = getenv(r'XDG_CONFIG_HOME')
 		if (user_config_dir is None): user_config_dir = f'{self.user_home_dir}/.config/'
 		self.pluginConfig = JDPluginConfig(user_config_dir)
-		self.libraries:List[JD_EntLibrary] = []
 		print(f'{DEBUG_PREFIX} INIT: user_home_dir: {self.user_home_dir}')
 
-
 	def do_activate(self): #from WindowActivatable
+		# Entity Tracking
+		self.libraries:List[JD_EntLibrary] = [] # TODO VESTIGIAL, remove ASAP
+		if self.entTracker is None:
+			self.entTracker = JD_EntTracker()
+		# Side Panel
+		if self.panel_manager is None:
+			self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.entTracker)
+		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
+		self.panel_manager.addTab(main_tab)	
+
+		# self.pluginConfig.SubscribeLibraryAdded(self.config_LibraryAdded)
+		# self.pluginConfig.SubscribeLibraryRemoved(self.config_LibraryRemoved)
 		self._insert_menu()
-
-		self.panel_manager = JDSidePanelManager(self.window.get_side_panel())
-		
-		self.main_tab = JDPanelTab(self.window)
-		self.panel_manager.addTab(self.main_tab)
-		
-		for library_path in self.pluginConfig.GetLibraries():
-			print(f'{DEBUG_PREFIX} library_path: {library_path}')
-			library =  JD_EntLibrary(library_path)
-			self.main_tab.addLibrary(library) # TODO this will become for library in config.libraries addLibrary(lib).
-			self.libraries.append(library)
-
-		self.pluginConfig.SubscribeLibraryAdded(self.config_LibraryAdded)
-		self.pluginConfig.SubscribeLibraryRemoved(self.config_LibraryRemoved)
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
 
 	def config_LibraryAdded(self,library_path:str):
@@ -70,9 +69,15 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
-		print(f'{DEBUG_PREFIX} TODO: remove side panel') # TODO remove side panel
 		self._remove_menu()
 		self._action_group = None
+		
+		self.panel_manager.deactivate()
+		self.panel_manager = None
+
+		self.entTracker.deactivate()
+		self.entTracker = None
+
 
 	def do_update_state(self): #from WindowActivatable
 		# window has been updated, such as active tab changed
