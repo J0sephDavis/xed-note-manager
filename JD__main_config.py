@@ -45,13 +45,8 @@ class JDPluginConfig():
 		print(f'{DEBUG_PREFIX} Loading configuration file ({self.config_file_path})')
 		file:Gio.File = getFileFromPath(self.config_file_path)
 		if (file.query_exists()): self.__yaml = readYAML(self.config_file_path)
-		if self.__yaml is None:
-			print(f'{DEBUG_PREFIX} config does not exist. Creating')
-			self.__yaml = {
-			"notes_directories" : [f'{getenv('HOME')}/Documents/Notes'],
-			}
-			return
 		# ---
+		if (self.__yaml is None): self.__yaml = {}
 		print(f'{DEBUG_PREFIX} config:  {type(self.__yaml)}\n{self.__yaml}')
 
 	def SubscribeLibraryAdded(self, callback): 
