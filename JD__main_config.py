@@ -75,6 +75,9 @@ class JDPluginConfig():
 		old_libraries = self.GetLibraries()
 		libraries:List[str] = []
 		self.__yaml['notes_directories'] = libraries
+		assert libraries is not old_libraries, "libraries is old_libraries. yaml[notes_dir] should have been replaced with a new list."
+		# --- Get the libraries from the widget's buffer
+		buffer = libraryPath_GtkTextView.get_buffer()
 		buff_text:List[str] = buffer.get_text(buffer.get_start_iter(),buffer.get_end_iter(),False).splitlines()
 		# -- Notify subscribers about new libraries
 		for line in buff_text:
@@ -93,22 +96,23 @@ class JDPluginConfig():
 		outputStream.write_all(yaml_bytes)
 		outputStream.close()
 
-	def _createWidget(self):
-		self.widget = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+	def createConfigureWidget(self):
+		print(f'{DEBUG_PREFIX} JDpluginConfig createConfigureWidget')
+		widget = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 		# --------------
 		# row_notes_dir = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
 		# notes_dir_path_label = Gtk.Label(label=self.GetLibraryPath())
-		self.libraryPaths_GtkTextView = Gtk.TextView()
+		libraryPaths_GtkTextView = Gtk.TextView()
 		text = self.__yaml['notes_directories']
 		if text is None:
 			text = ''
 		else:
 			text = '\n'.join(text)
-		self.libraryPaths_GtkTextView.get_buffer().set_text(text)
+		libraryPaths_GtkTextView.get_buffer().set_text(text)
 		# ------
-		self.widget.pack_start(Gtk.Label(label="notes_dir"),True,True,0)
+		widget.pack_start(Gtk.Label(label="notes_dir"),True,True,0)
 		# row_notes_dir.pack_start(notes_dir_path_label,True,True,0)
-		self.widget.pack_start(self.libraryPaths_GtkTextView,True,True,0) # TOD request more size!
+		widget.pack_start(libraryPaths_GtkTextView,True,True,0) # TOD request more size!
 		# --------------
 		row_file_regex = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
 		file_regex_entry = Gtk.Entry()
@@ -118,14 +122,11 @@ class JDPluginConfig():
 		# --------------
 		# TODO save on close instead of with this button? the close button comes default... maybe get signal of widget being destroyed?
 		save_button = Gtk.Button.new_with_label("Save")
-		save_button.connect("clicked",self.saveConfig)
+		save_button.connect("clicked",self.saveConfig, libraryPaths_GtkTextView)
 		# --------------
 		# widget_vbox.pack_start(row_notes_dir,True,True,0)
-		self.widget.pack_start(row_file_regex,True,True,0)
-		self.widget.pack_start(save_button,True,True,0)
+		widget.pack_start(row_file_regex,True,True,0)
+		widget.pack_start(save_button,True,True,0)
 		# --------------
-		# TODO button with callback connected to saveConfig
-
-	def createConfigureWidget(self):
-		if self.widget is None: self._createWidget()
-		return self.widget
+		widget.show_all()
+		return widget
