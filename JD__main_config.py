@@ -1,40 +1,55 @@
 from JD__utils import *
 from gi.repository import Gtk
-import os
+from os import getenv;
+from typing import Dict, List
 
 class JDPluginConfig():
-	user_home_dir = os.getenv('HOME')
-	library_added_callbacks = []
-	library_removed_callbacks = []
-	libraries:List[str] = []
+	already_init=False
+	# libraries:List[str] = []
+	def __new__(self):
+		print(f'{DEBUG_PREFIX} JDPluginConfig __new__  ======================')
+		if not hasattr(self,'instance'):
+			print(f'{DEBUG_PREFIX} creating new instance')
+			self.instance = super().__new__(self)
+		print(f'{DEBUG_PREFIX} returning existing instance')
+		return self.instance
 
-	def __init__(self, config_file_path:str):
+
+	def __init__(self):
 		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
-		self.path:str = config_file_path + 'xed_JDplugin.conf'
-		self.widget:Gtk.Widget = None # TODO this should be made into a class variable. Then make a method for updating the fields
-		self.__yaml:object = None
+		if (self.already_init):
+			print(f'{DEBUG_PREFIX} JDPluginConfig INIT TRAP')
+			return
+		self.already_init = True
+		user_home_dir = getenv('HOME')
+		user_config_dir = getenv('XDG_CONFIG_HOME')
+		if (user_config_dir is None):
+			user_config_dir = f'{user_home_dir}/.config/'
+
+		self.config_file_path:str = user_config_dir + 'xed_JDplugin.conf'
+
+		self.library_added_callbacks = []
+		self.library_removed_callbacks = []
+
+		self.__yaml:Dict = None
 		self._loadConfig()
 
 	def GetLibraries(self) -> List[str]: return self.__yaml['notes_directories']
 
 	def _loadConfig(self):
-		self.__yaml = None
-		print(f'{DEBUG_PREFIX} Loading configuration file ({self.path})')
-		file:Gio.File = getFileFromPath(self.path)
-		if (file.query_exists()): self.__yaml = readYAML(self.path)
+		assert self.__yaml is None, "JDPluginConfig:_loadConfig self.__yaml is not None."
+
+		print(f'{DEBUG_PREFIX} Loading configuration file ({self.config_file_path})')
+		file:Gio.File = getFileFromPath(self.config_file_path)
+		if (file.query_exists()): self.__yaml = readYAML(self.config_file_path)
 		if self.__yaml is None:
 			print(f'{DEBUG_PREFIX} config does not exist. Creating')
 			self.__yaml = {
-			"notes_directories" : [f'{self.user_home_dir}/Documents/Notes'],
+			"notes_directories" : [f'{getenv('HOME')}/Documents/Notes'],
 			}
 			return
 		# ---
 		print(f'{DEBUG_PREFIX} config:  {type(self.__yaml)}\n{self.__yaml}')
-		# ---
-		# self.libraries = []
-		for dir in self.__yaml["notes_directories"]:
-			print(f'{DEBUG_PREFIX} loadConfig, append dir: {dir}')
-			self.libraries.append(dir)
 
 	def SubscribeLibraryAdded(self, callback): 
 		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY ADDED {callback}')
@@ -56,31 +71,23 @@ class JDPluginConfig():
 		for cb in self.library_removed_callbacks:
 			cb(library_path)
 
-	def saveConfig(self,action):
-		old_libraries = self.libraries
-		self.libraries = []
-		
-		print(f'{DEBUG_PREFIX} saveConfig:\n{self.__yaml}')
-		file:Gio.File = getFileFromPath(self.path)
-		if (file.query_exists()):
-			file.delete()
-		buffer = self.libraryPaths_GtkTextView.get_buffer()
+	def saveConfig(self,save_button, libraryPath_GtkTextView):
+		old_libraries = self.GetLibraries()
+		libraries:List[str] = []
+		self.__yaml['notes_directories'] = libraries
 		buff_text:List[str] = buffer.get_text(buffer.get_start_iter(),buffer.get_end_iter(),False).splitlines()
-		# notify subscribes about new libraries
+		# -- Notify subscribers about new libraries
 		for line in buff_text:
-			self.libraries.append(line)
+			libraries.append(line) # TODO check whether they are valid directories? Maybe warn or silent fail. It's not always a big deal, especially if you use removable drives.
 			if line not in old_libraries:
-				print(f'{DEBUG_PREFIX} new library {line}')
 				self.EmitLibraryAdded(line)
-		# find paths that were removed from the configuration
-		for library in old_libraries:
-			if library not in self.libraries:
-				print(f'{DEBUG_PREFIX} library removed: {library}')
-				self.EmitLibraryRemoved(library)
-		print(f'{DEBUG_PREFIX} old_libraries:\ts{old_libraries}')
-		print(f'{DEBUG_PREFIX} libraries:\t{self.libraries}')
-		self.__yaml['notes_directories'] = self.libraries
-
+		# -- Notify subscribers about libraries which have been removed
+		for removed_library in filter(lambda old_lib: old_lib not in libraries, old_libraries):
+			self.EmitLibraryRemoved(removed_library)
+		# --- Write to File
+		file:Gio.File = getFileFromPath(self.config_file_path)
+		if (file.query_exists()): # despite using the FileCreateFlags.REPLACE_DESTINATION, an error is stillthrown if the file exists...
+			file.delete()
 		outputStream:Gio.FileOutputStream = file.create(Gio.FileCreateFlags.REPLACE_DESTINATION, None)
 		yaml_bytes = bytearray(yaml.dump(self.__yaml, explicit_start=True,explicit_end=False) + '---', encoding='utf-8')
 		outputStream.write_all(yaml_bytes)
