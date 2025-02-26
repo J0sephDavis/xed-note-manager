@@ -53,27 +53,7 @@ class JDPluginConfig():
 		if (self.__yaml is None): self.__yaml = {}
 		print(f'{DEBUG_PREFIX} config:  {type(self.__yaml)}\n{self.__yaml}')
 
-	def SubscribeLibraryAdded(self, callback): 
-		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY ADDED {callback}')
-		self.library_added_callbacks.append(callback)
-		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_added_callbacks}')
-
-	def SubscribeLibraryRemoved(self, callback):
-		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY REMOVED {callback}')
-		self.library_removed_callbacks.append(callback)
-		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_removed_callbacks}')
-
-	def EmitLibraryAdded(self, library_path:str):
-		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY ADDED: {library_path}\n{self.library_added_callbacks}')
-		for cb in self.library_added_callbacks:
-			cb(library_path)
-
-	def EmitLibraryRemoved(self, library_path:str):
-		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY REMOVED: {library_path}\n{self.library_removed_callbacks}')
-		for cb in self.library_removed_callbacks:
-			cb(library_path)
-
-	def saveConfig(self,save_button, libraryPath_GtkTextView):
+	def saveConfig(self,save_button, libraryPath_GtkTextView,daily_note_text_entry):
 		old_libraries = self.GetLibraries()
 		libraries:List[str] = []
 		self.__yaml['notes_directories'] = libraries
@@ -148,3 +128,23 @@ class JDPluginConfig():
 		# --------------
 		widget.show_all()
 		return widget
+
+	def SubscribeLibraryAdded(self, callback): 
+		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY ADDED {callback}')
+		self.library_added_callbacks.append(callback)
+		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_added_callbacks}')
+
+	def SubscribeLibraryRemoved(self, callback):
+		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY REMOVED {callback}')
+		self.library_removed_callbacks.append(callback)
+		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_removed_callbacks}')
+
+	def EmitLibraryAdded(self, library_path:str):
+		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY ADDED: {library_path}\n{self.library_added_callbacks}')
+		for cb in self.library_added_callbacks:
+			cb(library_path)
+
+	def EmitLibraryRemoved(self, library_path:str):
+		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY REMOVED: {library_path}\n{self.library_removed_callbacks}')
+		for cb in self.library_removed_callbacks:
+			cb(library_path)
