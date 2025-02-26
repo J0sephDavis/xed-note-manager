@@ -28,37 +28,22 @@ menubar_ui_string = """<ui>
 class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
 	__gtype_name__ = "JDPlugin"
 	window = GObject.property(type=Xed.Window)
-	entTracker:JD_EntTracker = None
-	panel_manager:JDSidePanelManager = None
 
 	def __init__(self):
-		# the plugin config class must be created during __init__ or else,
-		# the plugin configuration widget cannot be retrieved.
-		# This is because the preferences menu creates an entirely new instance of JDPlugin which
-		# but it does not call do_activate.
-
-		print(f"{DEBUG_PREFIX}plugin init")
+		print(f'{DEBUG_PREFIX} ------------------ JDPlugin init -----------------')
+		self.search_str = 'name' # TOBE deprecated
 		GObject.Object.__init__(self)
-		
-		self.user_home_dir = getenv(r'HOME')
+		self.pluginConfig = JDPluginConfig()
 
-		self.search_str = 'name'
-		user_config_dir = getenv(r'XDG_CONFIG_HOME')
-		if (user_config_dir is None): user_config_dir = f'{self.user_home_dir}/.config/'
-		self.pluginConfig = JDPluginConfig(user_config_dir)
-		print(f'{DEBUG_PREFIX} INIT: user_home_dir: {self.user_home_dir}')
 
 	def do_activate(self): #from WindowActivatable
 		# Entity Tracking
-		self.libraries:List[JD_EntLibrary] = [] # TODO VESTIGIAL, remove ASAP
-		if self.entTracker is None:
-			self.entTracker = JD_EntTracker()
+		self.entTracker = JD_EntTracker()
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
 		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
 		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
 		# Side Panel
-		if self.panel_manager is None:
-			self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.entTracker)
+		self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.entTracker)
 		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
 		self.panel_manager.addTab(main_tab)	
 
