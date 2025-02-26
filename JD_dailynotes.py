@@ -38,6 +38,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		# Entity Tracking
 		self.entTracker = JD_EntTracker()
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
+		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
 		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
 		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
 		# Side Panel
