@@ -89,6 +89,25 @@ class JDPluginConfig():
 		# -- Notify subscribers about libraries which have been removed
 		for removed_library in filter(lambda old_lib: old_lib not in libraries, old_libraries):
 			self.EmitLibraryRemoved(removed_library)
+		# --- Daily Note Text Entry
+		daily_notes_path = daily_note_text_entry.get_text()
+		old_daily_notes_path = self.GetDailyNotesPath()
+		print(f'{DEBUG_PREFIX} old:{old_daily_notes_path} new:{daily_notes_path}')
+		if (old_daily_notes_path is not None or old_daily_notes_path != ''):
+			#  There WAS an old path, and it is not equal to the new path
+			if (old_daily_notes_path != daily_notes_path):
+				self.EmitLibraryRemoved(old_daily_notes_path)
+				if (daily_notes_path is not None and daily_notes_path != ''):
+					self.EmitLibraryAdded(daily_notes_path)
+					print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {daily_notes_path}')
+					self.__yaml['daily_notes_path'] = daily_notes_path
+		elif (daily_notes_path is not None and daily_notes_path != ''): # creating a path when one previously did not exist
+			self.EmitLibraryAdded(daily_notes_path)
+			self.__yaml['daily_notes_path'] = daily_notes_path
+		else:
+			self.__yaml['daily_notes_path'] = None
+		print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {self.GetDailyNotesPath()}')
+
 		# --- Write to File
 		file:Gio.File = getFileFromPath(self.config_file_path)
 		if (file.query_exists()): # despite using the FileCreateFlags.REPLACE_DESTINATION, an error is stillthrown if the file exists...
