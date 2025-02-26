@@ -5,8 +5,6 @@ from gi.repository import PeasGtk
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
-from gi.repository import GLib
-from os import getenv # to get users home directory? May not be needed if we just make the path in the config?
 
 from JD_yaml_dialog import *
 from JD__entities import *
@@ -61,24 +59,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self.entTracker.deactivate()
 		self.entTracker = None
 
-	# def config_LibraryAdded(self,library_path:str):
-	# 	print(f'{DEBUG_PREFIX} (event) LIBRARY ADDED. {library_path}')
-	# 	main_tab = self.panel_manager.getTab('main')
-	# 	if main_tab is None:
-	# 		print(f'{DEBUG_PREFIX} main_tab does not exist')
-	# 		return
-	# 	main_tab.addLibrary(JD_EntLibrary(library_path))
-
-	# def config_LibraryRemoved(self,library_path:str):
-	# 	print(f'{DEBUG_PREFIX} (event) LIBRARY REMOVED. {library_path}')
-	# 	main_tab = self.panel_manager.getTab('main')
-	# 	if main_tab is None:
-	# 		print(f'{DEBUG_PREFIX} main_tab does not exist')
-	# 		return
-	# 	main_tab.removeLibrary(library_path)
-
 	def do_update_state(self): #from WindowActivatable
-		# window has been updated, such as active tab changed
 		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
 		# self._action_group.set_sensitive(self.window.get_active_document() != None)
 
@@ -120,7 +101,6 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		for note in self.library.GetNotes():
 			print(f'{DEBUG_PREFIX} NOTE: {note.filename}')
 			if SearchNoteYaml(search, note):
-				# JDPlugin_FileInformation_Window(note)
 				note.open_in_new_tab(self.window)
 
 def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
@@ -132,41 +112,3 @@ def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
 	yaml_str = yaml.__str__()
 	print(f'{DEBUG_PREFIX} note yaml: {yaml_str}')
 	return yaml_str.find(search_str) >= 0;
-
-# EXTERNAL DOCS
-# E1 - PyGObject / 'gi': https://amolenaar.pages.gitlab.gnome.org/pygobject-docs/
-# E2 - Gio 2.0: https://lazka.github.io/pgi-docs/Gio-2.0/mapping.html
-# E3 - Gio 2.0 (official): https://docs.gtk.org/gio/index.html?q=file_enumerate_#enums
-# E4 - Gdk3.0: https://docs.gtk.org/gdk3/
-# E5 - Python bytes objects: https://docs.python.org/3/library/stdtypes.html#bytes-objects
-# E6 - PyYaml: https://pyyaml.org/wiki/PyYAMLDocumentation
-
-# GUIDES
-# G1 - Gedit python plugin how to: https://wiki.gnome.org/Apps/Gedit/PythonPluginHowTo
-# G2 - How to write plugins for gedit: https://theawless.github.io/How-to-write-plugins-for-gedit/
-# G3 - getting a file: https://stackoverflow.com/questions/60109241/how-to-get-icon-for-a-file-using-gio-and-python3
-# G4 - PyGObject Asynchronous programming guide (callbacks/asyncio): https://pygobject.gnome.org/guide/asynchronous.html#asynchronous-programming-with-callbacks
-# G5 - Where can I find the Python bindings for GIO's GSocket?: https://stackoverflow.com/questions/4677807/where-can-i-find-the-python-bindings-for-gios-gsocket
-# G6 - GIO tutorial: File operations: https://sjohannes.wordpress.com/2009/10/10/gio-tutorial-file-operations/#comment-58
-# G7 - Tutorial for Gedit3 https://wiki.gnome.org/Apps/Gedit/PythonPluginHowTo
-# G8 ! Python Gtk3 Tutorial (BEST RESOURCE) https://python-gtk-3-tutorial.readthedocs.io/en/latest/index.html
-
-# OTHER
-# O1 - libyaml (C): https://github.com/yaml/libyaml/
-
-# BUILDING
-# Plugins must be placed in:
-# ~/.local/share/xed/plugins
-# then gdb xed; run
-
-# TODOs (indexed by written order, not priority)
-# TODO 2 [ ] keep track of yaml we have already seen in some searchable datastruct
-# TODO 3 [ ] Provide key-value pairs, possibly with regex to let users wildcard match for some value
-# TODO 5 [ ] Show results in the file browser on the left (maybe or own list instead of the one provided by the ifle browser plugin)
-# TODO 6 [ ] asynchronous file searching + support for cancelling. (See G4 and process_files method)
-# TODO 7 [ ] (bug) when reading yaml, we read the byte arrays and search for the substring b'---'; however,
-#		we do not cover the edge case of the substring being split between subsequent reads. e.g., read 1 ends in "\n--"
-#		read 2 begins with "-\n".
-# TODO 8 [ ] When processing yaml, make the bytes_read configureable by the user? Maybe they're running on a device with very little ram
-#		or they know better than us about  how much data they wish to read at once..
-# TODO 9 [ ] Configureable regex for filenames. If non provided, just accept all files. Otherwise, compile a regex string and just check that a match exists.
