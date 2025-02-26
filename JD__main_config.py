@@ -37,16 +37,22 @@ class JDPluginConfig():
 			self.libraries.append(dir)
 
 	def SubscribeLibraryAdded(self, callback): 
+		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY ADDED {callback}')
 		self.library_added_callbacks.append(callback)
+		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_added_callbacks}')
 
-	def SubscribeLibraryRemoved(self, callback): 
+	def SubscribeLibraryRemoved(self, callback):
+		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY REMOVED {callback}')
 		self.library_removed_callbacks.append(callback)
+		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_removed_callbacks}')
 
 	def EmitLibraryAdded(self, library_path:str):
+		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY ADDED: {library_path}\n{self.library_added_callbacks}')
 		for cb in self.library_added_callbacks:
 			cb(library_path)
 
 	def EmitLibraryRemoved(self, library_path:str):
+		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY REMOVED: {library_path}\n{self.library_removed_callbacks}')
 		for cb in self.library_removed_callbacks:
 			cb(library_path)
 
