@@ -33,7 +33,7 @@ class JD_EntTracker(): # TODO better name
 		print(f'{DEBUG_PREFIX} libraryAddedCallback: {library_path}')
 		library = JD_EntLibrary(library_path)
 		self.libraries.append(library)
-		self.announceLibraryAdded(library)
+		self.AnnounceLibraryAdded(library)
 
 	def libraryRemovedCallback(self, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryRemovedCallback: {library_path}')
@@ -44,27 +44,27 @@ class JD_EntTracker(): # TODO better name
 		print(f'{DEBUG_PREFIX} REMOVAL[]: {removal}')
 		for library in removal:
 			self.libraries.remove(library)
-			self.announceLibraryRemoved(library)
+			self.AnnounceLibraryRemoved(library)
 			print(f'{DEBUG_PREFIX} refcount of library({library.path}): {sys.getrefcount(library)}')
 			self.discard_pile.append(weakref.ref(library))
 # --------------------------------- events ----------------------------------------
-	def announceLibraryRemoved(self, library:JD_EntLibrary):
+	def AnnounceLibraryRemoved(self, library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} EntTracker announceLibraryRemoved {library.path}\n{self.subscribers_library_removed}')
 		for callback in self.subscribers_library_removed:
 			callback()(library)
 	
-	def announceLibraryAdded(self,library:JD_EntLibrary):
+	def AnnounceLibraryAdded(self,library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} EntTracker announceLibraryAdded {library.path}\n {self.subscribers_library_added}')
 		for callback in self.subscribers_library_added:
 			callback()(library)
 
-	def subscribeLibraryAdded(self, callback): 
+	def SubscribeLibraryAdded(self, callback): 
 		if not callable(callback):
 			print(f'{DEBUG_PREFIX} EntTracker subscribeLibraryAdded, callback is not callable.')
 			return
 		self.subscribers_library_added.append(weakref.WeakMethod(callback))
 
-	def subscribeLibraryRemoved(self, callback): 
+	def SubscribeLibraryRemoved(self, callback): 
 		if not callable(callback):
 			print(f'{DEBUG_PREFIX} EntTracker subscribeLibraryRemoved, callback is not callable.')
 			return
