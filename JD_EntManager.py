@@ -4,7 +4,6 @@ import weakref
 class JD_EntTracker(): # TODO better name
 	libraries:List[JD_EntLibrary] = []
 	notes_weak:List[JD_EntNote] = []
-	discard_pile:List[JD_EntLibrary] = [] # weak refs to every library we have removed. for debugging
 
 	subscribers_library_removed = [] # try weak refs here. no sense in keeping an object in existence because it has a callback attached.
 	subscribers_library_added = []
@@ -17,7 +16,6 @@ class JD_EntTracker(): # TODO better name
 		self.subscribers_library_removed.clear()
 		self.subscribers_library_added.clear()
 		self.libraries.clear()
-		self.discard_pile.clear()
 		self.notes_weak.clear()
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
@@ -46,7 +44,6 @@ class JD_EntTracker(): # TODO better name
 			self.libraries.remove(library)
 			self.AnnounceLibraryRemoved(library)
 			print(f'{DEBUG_PREFIX} refcount of library({library.path}): {sys.getrefcount(library)}')
-			self.discard_pile.append(weakref.ref(library))
 # --------------------------------- events ----------------------------------------
 	def AnnounceLibraryRemoved(self, library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} EntTracker announceLibraryRemoved {library.path}\n{self.subscribers_library_removed}')
