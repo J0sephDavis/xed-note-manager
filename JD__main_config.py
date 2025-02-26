@@ -34,7 +34,10 @@ class JDPluginConfig():
 		self.__yaml:Dict = None
 		self._loadConfig()
 
-	def GetLibraries(self) -> List[str]: return self.__yaml['notes_directories']
+	def GetLibraries(self) -> List[str]:
+		if 'notes_directories' in self.__yaml:
+			return self.__yaml['notes_directories']
+		return []
 
 	def _loadConfig(self):
 		assert self.__yaml is None, "JDPluginConfig:_loadConfig self.__yaml is not None."
