@@ -38,6 +38,10 @@ class JDPluginConfig():
 		if 'notes_directories' in self.__yaml:
 			return self.__yaml['notes_directories']
 		return []
+	def GetDailyNotesPath(self)->str:
+		if 'daily_notes_path' in self.__yaml:
+			return self.__yaml['daily_notes_path']
+		return None
 
 	def _loadConfig(self):
 		assert self.__yaml is None, "JDPluginConfig:_loadConfig self.__yaml is not None."
