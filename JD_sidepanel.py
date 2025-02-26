@@ -114,6 +114,7 @@ class JDSidePanelManager():
 		# add libraries
 		for library in self.entityTracker.GetLibraries():
 			panelTab.onLibraryAdded(library) # TODO this will become for library in config.libraries addLibrary(lib).
+		self.panels.append(panelTab)
 
 	def getTab(self, tab_name:str):
 		return self.panels[tab_name]
@@ -125,5 +126,6 @@ class JDSidePanelManager():
 			print(f'{DEBUG_PREFIX} removing panel {panel.internal_name}')
 			self.side_panel.remove_item(panel.GetWidget())
 			panel.treeView.get_model().clear() # Is this necessary? Or will it be destroyed when we clear the widget.
-			panel.widget = None
+			panel.widget_container = None # TODO move this code into panel.deactivate() method
+		self.panels.clear()
 		self.side_panel = None
