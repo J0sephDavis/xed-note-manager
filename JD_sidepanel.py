@@ -81,20 +81,20 @@ class JDPanelTab(Gtk.TreeView):
 			return
 
 	def onLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
-		print(f'{DEBUG_PREFIX} PanelTab addLibrary')
+		print(f'{DEBUG_PREFIX} PanelTab addLibrary path:{library.path}')
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.getFilename(), note])
 	
 	def onLibraryRemoved(self,library:JD_EntLibrary):
-		print(f'{DEBUG_PREFIX} onLibraryRemoved')
+		print(f'{DEBUG_PREFIX} onLibraryRemoved path:{library.path}')
 		removal:List[Gtk.TreeIter] = []
 		model:Gtk.TreeStore = self.treeView.get_model()
 		for node in model:
 			if node[1] == library:
 				removal.append(node.iter)
 		for node in removal:
-			model.remove(iter)
+			model.remove(node)
 
 class JDSidePanelManager():
 	side_panel:Xed.Panel = None
