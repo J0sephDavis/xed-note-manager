@@ -15,15 +15,19 @@ class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a g
 
 
 class JD_EntNote(JD_EntBase):
-	def __init__(self, parent_dir:str, fileInfo:Gio.FileInfo):
-		self.fileInfo = fileInfo
-		self.path = f'{parent_dir}/{fileInfo.get_name()}'
 
-		super().__init__(getFileFromPath(self.path))
+	def __init__(self, file:Gio.File):
+		super().__init__(file=file)
 		
 		self.file_read:bool = False # True ONLY if readYAML has been called already.
 		self.__yaml = None
-		
+
+	@classmethod
+	def from_GFileInfo(cls, parent_dir:str, fileInfo:Gio.FileInfo):
+		path = f'{parent_dir}/{fileInfo.get_name()}'
+		return cls(getFileFromPath(path))
+		pass
+
 	def open_in_new_tab(self, window:Xed.Window): # window is the main Xed window
 		# TODO, If window is already open, focus tab instead of opening a new one.
 		# Make configurable? Or accelerator defined, like ctrl+activate opens regardless.
@@ -75,4 +79,4 @@ class JD_EntLibrary(JD_EntBase):
 		for note in notes:
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				self.notes.append(JD_EntNote(self.path, note))
+				self.notes.append(JD_EntNote.from_GFileInfo(self.path, note))
