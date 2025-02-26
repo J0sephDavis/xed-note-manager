@@ -97,34 +97,31 @@ class JDPluginConfig():
 	def createConfigureWidget(self):
 		print(f'{DEBUG_PREFIX} JDpluginConfig createConfigureWidget')
 		widget = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
-		# --------------
-		# row_notes_dir = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
-		# notes_dir_path_label = Gtk.Label(label=self.GetLibraryPath())
-		libraryPaths_GtkTextView = Gtk.TextView()
-		text = self.__yaml['notes_directories']
+		# -- Daily note text entry
+		text = None
+		if 'daily_notes_path' in self.__yaml:
+			text =  self.__yaml['daily_notes_path']
 		if text is None:
 			text = ''
-		else:
-			text = '\n'.join(text)
+		daily_note_text_entry = Gtk.Entry(text=text)
+		widget.pack_start(Gtk.Label(label="Daily notes folder"), False,False,0)
+		widget.pack_start(daily_note_text_entry, True,True,0)
+		# -- Note directory text view
+		libraryPaths_GtkTextView = Gtk.TextView()
+		text = None
+		if 'notes_directories' in self.__yaml:
+			text = self.__yaml['notes_directories']
+			if text is not None:
+				text = '\n'.join(text)
+		if text is None:
+			text = ''
 		libraryPaths_GtkTextView.get_buffer().set_text(text)
-		# ------
-		widget.pack_start(Gtk.Label(label="notes_dir"),True,True,0)
-		# row_notes_dir.pack_start(notes_dir_path_label,True,True,0)
+		widget.pack_start(Gtk.Label(label="notes_dir"),False,False,0)
 		widget.pack_start(libraryPaths_GtkTextView,True,True,0) # TOD request more size!
-		# --------------
-		row_file_regex = Gtk.Box(spacing=6,orientation=Gtk.Orientation.HORIZONTAL)
-		file_regex_entry = Gtk.Entry()
-		# ------
-		row_file_regex.pack_start(Gtk.Label(label="the regex string used to determine what files to check the yaml of"),True,True,0)
-		row_file_regex.pack_start(file_regex_entry,True,True,0)
-		# --------------
-		# TODO save on close instead of with this button? the close button comes default... maybe get signal of widget being destroyed?
+		# -- Save Button
 		save_button = Gtk.Button.new_with_label("Save")
-		save_button.connect("clicked",self.saveConfig, libraryPaths_GtkTextView)
-		# --------------
-		# widget_vbox.pack_start(row_notes_dir,True,True,0)
-		widget.pack_start(row_file_regex,True,True,0)
-		widget.pack_start(save_button,True,True,0)
+		save_button.connect("clicked",self.saveConfig, libraryPaths_GtkTextView, daily_note_text_entry)
+		widget.pack_start(save_button,False,False,0)
 		# --------------
 		widget.show_all()
 		return widget
