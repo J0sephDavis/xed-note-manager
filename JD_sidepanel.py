@@ -25,28 +25,28 @@ def treeStorePrintRow(store,tPath,tIter):
 
 class JDPanelTab(Gtk.TreeView):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
-		super().__init__()
+		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
+		super().__init__(model=treeStore)
+		
 		self.internal_name = internal_name
 		self.display_name = display_name
 		self.icon_name = icon_name
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
 		self.widget_container = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 
-		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
-		self.treeView:Gtk.TreeView = Gtk.TreeView(model=treeStore)
 		
-		self.treeView.insert_column(
+		self.insert_column(
 			Gtk.TreeViewColumn(title='name', cell_renderer=Gtk.CellRendererText(),text=0),
 			position=-1
 		)
 		
 		# https://lazka.github.io/pgi-docs/Gtk-3.0/classes/TreeView.html#signals
-		self.treeView.connect("row-activated", self.handler_row_activated, window)
+		self.connect("row-activated", self.handler_row_activated, window)
 
 		remove_item_button = Gtk.Button(label="Remove Selected")
 		remove_item_button.connect("clicked", self.handler_remove_selected)
 		self.widget_container.pack_start(remove_item_button,False,True,5)
-		self.widget_container.pack_start(self.treeView,True,True,0)
+		self.widget_container.pack_start(self,True,True,0)
 		self.widget_container.show_all()
 
 	def GetWidget(self): return self.widget_container;
@@ -61,7 +61,7 @@ class JDPanelTab(Gtk.TreeView):
 	
 	def handler_remove_selected(self, button): # this could probably be moved to JDSidePanelManager because it does not need to rely on instance data (which could be passed as args)
 		print(f'{DEBUG_PREFIX} handler_remove_selected')
-		selection:Gtk.TreeSelection = self.treeView.get_selection()
+		selection:Gtk.TreeSelection = self.get_selection()
 		selection_mode = selection.get_mode()
 
 		if (selection_mode != Gtk.SelectionMode.SINGLE and selection_mode != Gtk.SelectionMode.BROWSE):
@@ -76,7 +76,7 @@ class JDPanelTab(Gtk.TreeView):
 		print(f'{DEBUG_PREFIX} {type(entry)} SELECTED[0] {entry[0]} [1]: {entry[1]}')
 		if (type(entry[1]) is JD_EntLibrary):
 			print(f'{DEBUG_PREFIX} removing library {entry[0]}')
-			self.treeView.get_model().remove(selected_iter)
+			self.get_model().remove(selected_iter)
 		else:
 			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
 			return
@@ -85,16 +85,16 @@ class JDPanelTab(Gtk.TreeView):
 		library.SubscribeNoteAdded(self.OnNoteAdded)
 		library.SubscribeNoteRemoved(self.OnNoteRemoved)
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
-		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
+		node:Gtk.TreeIter = self.get_model().append(None, [library.getFilename(), library])
 		for note in library.notes:
-			self.treeView.get_model().append(node, [note.getFilename(), note])
+			self.get_model().append(node, [note.getFilename(), note])
 	
 	def OnLibraryRemoved(self,library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved path:{library.path}')
 		library.UnsubscribeNoteAdded(self.OnNoteAdded)
 		library.UnsubscribeNoteRemoved(self.OnNoteRemoved)
 		removal:List[Gtk.TreeIter] = []
-		model:Gtk.TreeStore = self.treeView.get_model()
+		model:Gtk.TreeStore = self.get_model()
 		for node in model:
 			if node[1] == library:
 				removal.append(node.iter)
@@ -103,7 +103,7 @@ class JDPanelTab(Gtk.TreeView):
 
 	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.getFilename()}')
-		model = self.treeView.get_model()
+		model = self.get_model()
 		libIter = None
 		for node in model:
 			if node[1] == library:
@@ -115,7 +115,7 @@ class JDPanelTab(Gtk.TreeView):
 
 	def OnNoteRemoved(self,library:JD_EntLibrary, note:JD_EntNote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {library.path} {note.getFilename()}')
-		model = self.treeView.get_model()
+		model = self.get_model()
 		libIter = None
 		for node in model:
 			if node[1] == library:
