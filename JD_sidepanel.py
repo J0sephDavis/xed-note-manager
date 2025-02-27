@@ -27,7 +27,7 @@ class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
-		
+
 		self.internal_name = internal_name
 		self.display_name = display_name
 		self.icon_name = icon_name
@@ -44,9 +44,16 @@ class JDPanelTab(Gtk.Box):
 
 		remove_item_button = Gtk.Button(label="Remove Selected")
 		remove_item_button.connect("clicked", self.handler_remove_selected)
+		self.treeView.connect('button-release-event', self.handler_button_release)
 		self.pack_start(remove_item_button,False,True,5)
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
+
+	def handler_button_release(self, view, event):
+		if (event.button != 3): return False # Propagate signal
+		print(f'{DEBUG_PREFIX} handler_button_release {view} {event}')
+		print(f'{DEBUG_PREFIX} x:{event.x} y:{event.y}')
+		return True # Do not propagate signal
 
 	def GetWidget(self): return self;
 
