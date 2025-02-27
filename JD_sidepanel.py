@@ -81,6 +81,8 @@ class JDPanelTab(Gtk.TreeView):
 			return
 
 	def OnLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
+		library.SubscribeNoteAdded(self.OnNoteAdded)
+		library.SubscribeNoteRemoved(self.OnNoteRemoved)
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
 		for note in library.notes:
@@ -88,6 +90,8 @@ class JDPanelTab(Gtk.TreeView):
 	
 	def OnLibraryRemoved(self,library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved path:{library.path}')
+		library.UnsubscribeNoteAdded(self.OnNoteAdded)
+		library.UnsubscribeNoteRemoved(self.OnNoteRemoved)
 		removal:List[Gtk.TreeIter] = []
 		model:Gtk.TreeStore = self.treeView.get_model()
 		for node in model:
@@ -95,6 +99,38 @@ class JDPanelTab(Gtk.TreeView):
 				removal.append(node.iter)
 		for node in removal:
 			model.remove(node)
+
+	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.getFilename()}')
+		model = self.treeView.get_model()
+		libIter = None
+		for node in model:
+			if node[1] == library:
+				libIter = node.iter
+		if (libIter is None):
+			print(f'{DEBUG_PREFIX} CANNOT ADD NOTE. Library is not in model.')
+			assert False, "state error"
+		model.append(libIter, [note.getFilename(), note])
+
+	def OnNoteRemoved(self,library:JD_EntLibrary, note:JD_EntNote):
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {library.path} {note.getFilename()}')
+		model = self.treeView.get_model()
+		libIter = None
+		for node in model:
+			if node[1] == library:
+				libIter = node.iter
+		if (libIter is None):
+			print(f'{DEBUG_PREFIX} CANNOT REMOVE NOTE. Library is not in model.')
+			assert False, "state error"
+		noteIter = None
+		for node in model[libIter]:
+			if node[1] == note:
+				noteIter = node.iter
+		if (noteIter is None):
+			print(f'{DEBUG_PREFIX} CANNOT REMOVE NOTE. note is not in library')
+			assert False, "state error"
+		model.remove(noteIter)
+		
 
 class JDSidePanelManager():
 	side_panel:Xed.Panel = None
