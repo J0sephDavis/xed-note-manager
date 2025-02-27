@@ -1,3 +1,4 @@
+import weakref
 from gi.repository import Gio;
 from gi.repository import Xed
 from JD__utils import *
@@ -63,6 +64,8 @@ class JD_EntLibrary(JD_EntBase):
 		super().__init__(file=library)
 		self.notes:List[JD_EntNote] = []
 		self._get_notes(library)
+		self.note_added_callbacks = []
+		self.note_removed_callbacks = []
 
 	def GetNotes(self):
 		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
@@ -78,7 +81,26 @@ class JD_EntLibrary(JD_EntBase):
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
 				self.notes.append(JD_EntNote.from_GFileInfo(self.path, note))
-
+	
+	def GetCreateNote(self, filename:str) -> JD_EntNote:
+		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
+		for note in self.notes:
+			if note.getFilename() == filename:
+				print(f'{DEBUG_PREFIX} note already exists, returning {note}')
+				return note
+		# -- create note
+		file:Gio.File = getFileFromPath(f'{self.path}/{filename}')
+		if (file.query_exists()):
+			print(f'{DEBUG_PREFIX} This should not happen. If the file exists, it should have been present in self.notes')
+			assert False, "state error"
+		outputStream:Gio.FileOutputStream = file.create(Gio.FileCreateFlags.NONE)
+		template_data = b'this is a test template!'
+		outputStream.write_all(template_data)
+		outputStream.close()
+		note = JD_EntNote(file=file)
+		self.notes.append(note)
+		self.AnnounceNoteAdded(note)
+		return note;
 
 
 	def SubscribeNoteAdded(self, callback):
