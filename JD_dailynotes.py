@@ -41,9 +41,15 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		# self._action_group.set_sensitive(self.window.get_active_document() != None)
 
 	def do_activate(self): #from WindowActivatable
-		
 		self._insert_menu()
-		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
+		self.PluginPrivate = JDPluginPriv(self)
+		# Side Panel
+		self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.PluginPrivate.entTracker)
+		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
+		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
+		self.panel_manager.addTab(main_tab)
+		
+		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
 
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
@@ -79,12 +85,13 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		manager.remove_action_group(self._action_group)
 		manager.ensure_update()
 
-	def DO_DailyNote(self,button):
+	def DO_DailyNote(self,*args):
 		daily_notes_path = self.pluginConfig.GetDailyNotesPath()
 		if (daily_notes_path is None):
 			print(f'{DEBUG_PREFIX} JDPlugin:DO_DailyNote daily_notes_path is None. Cannot create daily note')
 			return;
-		libraries = self.entTracker.GetLibraries()
+	
+		libraries = self.PluginPrivate.entTracker.GetLibraries()
 		for library in libraries:
 			if library.path == daily_notes_path:
 				date:datetime = datetime.now()
@@ -143,11 +150,6 @@ class JDPluginPriv():
 		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
 		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
 		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
-		# Side Panel
-		self.panel_manager = JDSidePanelManager(plugin.window.get_side_panel(), self.entTracker)
-		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
-		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=plugin.window)
-		self.panel_manager.addTab(main_tab)
 
 	def __del__(self):
 		self.panel_manager.deactivate()
