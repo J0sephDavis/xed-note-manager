@@ -45,6 +45,17 @@ class JD_EntNote(JD_EntBase):
 		return self.__yaml
 
 class JD_EntLibrary(JD_EntBase):
+	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
+	# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
+	# https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
+	search_attributes = ",".join([
+		r'standard::name',
+		r'standard::content-type',
+		r'standard::type',
+		r'standard::size',
+		r'time::modified',
+		r'access::can_read',
+	]);
 	def __init__(self, library_path:str):
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
@@ -58,21 +69,8 @@ class JD_EntLibrary(JD_EntBase):
 		return self.notes;
 
 	def _get_notes(self, library:Gio.File):
-		# PrintFileAttributeData(library)
-		# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
-		# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
-		search_attributes = ",".join([
-			r'standard::name',
-			r'standard::content-type',
-			r'standard::type',
-			r'standard::size',
-			r'time::modified',
-			r'access::can_read',
-		]);
-		
 		notes = library.enumerate_children(
-			search_attributes,
-			# https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
+			self.search_attributes,
 			Gio.FileQueryInfoFlags.NONE,
 			None
 		)
