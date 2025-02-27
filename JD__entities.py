@@ -78,3 +78,47 @@ class JD_EntLibrary(JD_EntBase):
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
 				self.notes.append(JD_EntNote.from_GFileInfo(self.path, note))
+
+
+
+	def SubscribeNoteAdded(self, callback):
+		print(f'{DEBUG_PREFIX} subscribe note added {callback}')
+		self.note_added_callbacks.append(weakref.WeakMethod(callback))
+
+	def SubscribeNoteRemoved(self, callback):
+		print(f'{DEBUG_PREFIX} subscribe note removed {callback}')
+		self.note_removed_callbacks.append(weakref.WeakMethod(callback))
+
+	def UnsubscribeNoteAdded(self,callback):
+		print(f'{DEBUG_PREFIX} unsubscribe note added {callback}')
+		remove_me = None
+		for cb in self.note_added_callbacks:
+			if cb() == callback:
+				remove_me = cb
+				break
+		if (remove_me is None):
+			print(f'{DEBUG_PREFIX} cannot unsubscribe, no matching callback')
+			return
+		self.note_added_callbacks.remove(remove_me)
+		print(f'{DEBUG_PREFIX} unsubscribed {remove_me}')
+		
+	def UnsubscribeNoteRemoved(self,callback):
+		print(f'{DEBUG_PREFIX} unsubscribe note removed {callback}')
+		remove_me = None
+		for cb in self.note_added_callbacks:
+			if cb() == callback:
+				remove_me = cb
+				break
+		if (remove_me is None):
+			print(f'{DEBUG_PREFIX} cannot unsubscribe, no matching callback')
+			return
+		self.note_added_callbacks.remove(remove_me)
+		print(f'{DEBUG_PREFIX} unsubscribed {remove_me}')
+
+	def AnnounceNoteAdded(self, note:JD_EntNote):
+		for cb in self.note_added_callbacks:
+			cb()(self,note)
+
+	def AnnounceNoteRemoved(self,  note:JD_EntNote):
+		for cb in self.note_removed_callbacks:
+			cb()(self,note)
