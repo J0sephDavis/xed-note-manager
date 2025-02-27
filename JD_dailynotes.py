@@ -83,8 +83,8 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 				("JDPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
 	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
 				# --
-				("JDPlugin_Create_DailyNote", None, _("Create a daily note"),
-	 			None, _("Creates (or opens) todays daily note"), self.DO_DailyNote),
+				("JDPlugin_Create_DailyNote", None, _("Create a daily note"), # type: ignore
+	 			None, _("Creates (or opens) todays daily note"), self.DO_DailyNote), # type: ignore
 			])
 		manager.insert_action_group(self._action_group, -1)
 		self._ui_id = manager.add_ui_from_string(menubar_ui_string)
@@ -108,7 +108,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 				filename = date.strftime(r'%Y-%m-%d Daily Note.md')
 				print(f'{DEBUG_PREFIX} create note {filename}')
 				note = library.GetCreateNote(filename)
-				note.open_in_new_tab(self.window)
+				note.open_in_new_tab(self.window) # if the current buffer is an unsaved unedited note. Close the unedited blank note and replace with 
 				return
 		print(f'{DEBUG_PREFIX} JDPlugin:DO_DailyNote could not find library where path == daily_notes_path')
 		return

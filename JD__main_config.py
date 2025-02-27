@@ -5,7 +5,7 @@ from typing import Dict, List
 
 class JDPluginConfig():
 	already_init=False
-	# libraries:List[str] = []
+
 	def __new__(self):
 		print(f'{DEBUG_PREFIX} JDPluginConfig __new__  ======================')
 		if not hasattr(self,'instance'):
@@ -13,7 +13,6 @@ class JDPluginConfig():
 			self.instance = super().__new__(self)
 		print(f'{DEBUG_PREFIX} returning existing instance')
 		return self.instance
-
 
 	def __init__(self):
 		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
@@ -38,6 +37,7 @@ class JDPluginConfig():
 		if 'notes_directories' in self.__yaml:
 			return self.__yaml['notes_directories']
 		return []
+	
 	def GetDailyNotesPath(self)->str:
 		if 'daily_notes_path' in self.__yaml:
 			return self.__yaml['daily_notes_path']
