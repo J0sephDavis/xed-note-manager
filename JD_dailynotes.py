@@ -3,9 +3,10 @@ from datetime import datetime
 
 import gi
 gi.require_version('PeasGtk', '1.0')
-from gi.repository import PeasGtk
+gi.require_version('Xed', '1.0')
 from gi.repository import GObject
 from gi.repository import Gtk
+from gi.repository import PeasGtk
 from gi.repository import Xed
 
 from JD_yaml_dialog import *

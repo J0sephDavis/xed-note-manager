@@ -7,7 +7,7 @@ class JDPluginConfig():
 	already_init=False
 
 	def __new__(self):
-		print(f'{DEBUG_PREFIX} JDPluginConfig __new__  ======================')
+		print(f'{DEBUG_PREFIX} JDPluginConfig __new__')
 		if not hasattr(self,'instance'):
 			print(f'{DEBUG_PREFIX} creating new instance')
 			self.instance = super().__new__(self)
