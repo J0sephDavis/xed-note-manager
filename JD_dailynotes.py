@@ -51,6 +51,26 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
 
+	def view_populate_popup(self, view:Xed.View, popup:Gtk.Menu):
+		print(f'{DEBUG_PREFIX} Plugin PopupMenu')
+		sep = Gtk.SeparatorMenuItem()
+		sep.show()
+		popup.append(sep)
+
+		debugItem = Gtk.MenuItem(label='DEBUG test')
+		debugItem.connect('activate', self.DEBUG_MenuItemActivated)
+		debugItem.show()
+		popup.append(debugItem)
+
+		dailyNoteItem = Gtk.MenuItem(label='Create/GOTO Daily Note')
+		dailyNoteItem.connect('activate',self.DO_DailyNote)
+		dailyNoteItem.show()
+		popup.append(dailyNoteItem)
+	
+	def DEBUG_MenuItemActivated(self, menuItem):
+		print(f'{DEBUG_PREFIX} menuitem pressed')
+	
+
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
 		self._remove_menu()
