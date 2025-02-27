@@ -36,19 +36,12 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		GObject.Object.__init__(self)
 		self.pluginConfig = JDPluginConfig()
 
+	def do_update_state(self): #from WindowActivatable
+		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
+		# self._action_group.set_sensitive(self.window.get_active_document() != None)
 
 	def do_activate(self): #from WindowActivatable
-		# Entity Tracking
-		self.entTracker = JD_EntTracker()
-		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
-		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
-		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
-		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
-		# Side Panel
-		self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.entTracker)
-		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
-		self.panel_manager.addTab(main_tab)	
-
+		
 		self._insert_menu()
 		print(f"{DEBUG_PREFIX}plugin created for {self.window}")
 
@@ -57,18 +50,8 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self._remove_menu()
 		self._action_group = None
 		
-		self.panel_manager.deactivate()
-		self.panel_manager = None
-
-		self.entTracker.deactivate()
-		self.entTracker = None
-
-	def do_update_state(self): #from WindowActivatable
-		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
-		# self._action_group.set_sensitive(self.window.get_active_document() != None)
-
 	def do_create_configure_widget(self): # from PeasGtk.Configurable
-		return self.pluginConfig.createConfigureWidget();
+		return self.pluginConfig.do_create_configure_widget();
 
 	#install menu items
 	def _insert_menu(self):
@@ -137,3 +120,37 @@ def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
 	yaml_str = yaml.__str__()
 	print(f'{DEBUG_PREFIX} note yaml: {yaml_str}')
 	return yaml_str.find(search_str) >= 0;
+
+class JDPluginPriv():
+	def __new__(cls, *args, **kwargs):
+		if not hasattr(cls,'_self'):
+			cls._self = super(JDPluginPriv, cls).__new__(cls)
+		return cls._self
+	
+	init_trap:bool = False
+	def __init__(self, plugin):
+		print(f'{DEBUG_PREFIX} plugin:{plugin}\n{dir(plugin)}')
+		print(f'{DEBUG_PREFIX} JDPluginData -----------------------------------')
+		if (self.init_trap): return
+		self.init_trap = True
+		self.plugin_weakref = weakref.ref(JDPlugin,plugin)
+		self.pluginConfig = JDPluginConfig()
+		print(f'{DEBUG_PREFIX}\pluginConfig: {self.pluginConfig}')
+		# Entity Tracking
+		self.entTracker = JD_EntTracker()
+		print(f'{DEBUG_PREFIX}\tentTracker: {self.entTracker}')
+		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
+		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
+		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
+		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
+		# Side Panel
+		self.panel_manager = JDSidePanelManager(plugin.window.get_side_panel(), self.entTracker)
+		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
+		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=plugin.window)
+		self.panel_manager.addTab(main_tab)
+
+	def __del__(self):
+		self.panel_manager.deactivate()
+		self.panel_manager = None
+		self.entTracker.deactivate()
+		self.entTracker = None

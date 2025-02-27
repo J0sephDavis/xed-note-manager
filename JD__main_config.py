@@ -97,7 +97,7 @@ class JDPluginConfig():
 		outputStream.write_all(yaml_bytes)
 		outputStream.close()
 
-	def createConfigureWidget(self):
+	def do_create_configure_widget(self): # PeasGtk.Configurable
 		print(f'{DEBUG_PREFIX} JDpluginConfig createConfigureWidget')
 		widget = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 		# -- Daily note text entry
