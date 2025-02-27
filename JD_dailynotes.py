@@ -37,11 +37,11 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		GObject.Object.__init__(self)
 		self.pluginConfig = JDPluginConfig()
 
-	def do_update_state(self): #from WindowActivatable
-		print(f"{DEBUG_PREFIX}plugin update for {self.window}")
-		# self._action_group.set_sensitive(self.window.get_active_document() != None)
+	def do_update_state(self):
+		print(f'{DEBUG_PREFIX} window:{self.window}')
 
 	def do_activate(self): #from WindowActivatable
+		self.views_handles = {}
 		self._insert_menu()
 		self.PluginPrivate = JDPluginPriv(self)
 		# Side Panel
@@ -49,8 +49,22 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
 		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
 		self.panel_manager.addTab(main_tab)
-		
+		# window signals
+		self.window.connect('tab-added', self.tab_added)
+		self.window.connect('tab-removed', self.tab_removed)
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
+
+	def tab_added(self, window, tab):
+		print(f'{DEBUG_PREFIX} TAB_ADDED\twindow:{window}\ttab:{tab}')
+		self.views_handles[tab] = tab.get_view().connect("populate-popup", self.view_populate_popup)
+		print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
+
+	def tab_removed(self, window, tab):
+		print(f'{DEBUG_PREFIX} TAB_REMOVED\twindow:{window}\ttab:{tab}')
+		view = tab.get_view()
+		view.disconnect(self.views_handles[tab])
+		del self.views_handles[tab]
+		print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
 
 	def view_populate_popup(self, view:Xed.View, popup:Gtk.Menu):
 		print(f'{DEBUG_PREFIX} Plugin PopupMenu')
@@ -69,7 +83,10 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		popup.append(dailyNoteItem)
 	
 	def DEBUG_MenuItemActivated(self, menuItem):
-		print(f'{DEBUG_PREFIX} menuitem pressed')
+		print(f'----------------------------------------------\n{DEBUG_PREFIX} Current tabs with populate-popup set: ')
+		for val in self.views_handles:
+			print(f'{DEBUG_PREFIX}\t{val}\t{self.views_handles[val]}')
+		print(f'----------------------------------------------')
 	
 
 	def do_deactivate(self): #from WindowActivatable
