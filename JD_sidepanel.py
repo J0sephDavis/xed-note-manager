@@ -8,6 +8,7 @@ from JD__entities import *
 from JD__utils import DEBUG_PREFIX
 from typing import List
 from JD_EntManager import *
+
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
@@ -133,14 +134,12 @@ class JDPanelTab(Gtk.TreeView):
 		
 
 class JDSidePanelManager():
-	side_panel:Xed.Panel = None
-	panels:List[JDPanelTab] = []
-	entityTracker:JD_EntTracker = None
-
 	def __init__(self, panel:Xed.Panel, entityTracker:JD_EntTracker):
+		self.entityTracker:JD_EntTracker = entityTracker
+		self.side_panel:Xed.Panel = None
+		self.panels:List[JDPanelTab] = [] # consider maing into a dictionary, key=Xed.Window, value=List[JDPanelTab]
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 		self.side_panel = panel
-		self.entityTracker = entityTracker
 
 	def addTab(self, panelTab:JDPanelTab):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
@@ -152,8 +151,11 @@ class JDSidePanelManager():
 			panelTab.OnLibraryAdded(library) # TODO this will become for library in config.libraries addLibrary(lib).
 		self.panels.append(panelTab)
 
-	def getTab(self, tab_name:str):
-		return self.panels[tab_name]
+	def getTab(self, tab_internal_name:str) -> JDPanelTab|None:
+		for panel in self.panels:
+			if panel.internal_name == tab_internal_name:
+				return panel
+		return None
 
 	def deactivate(self):
 		print(f'{DEBUG_PREFIX} JDSidePanelManager.deactivate()')
