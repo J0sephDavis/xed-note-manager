@@ -62,8 +62,7 @@ class JDPanelTab(Gtk.Box):
 		menu_RemoveSelected.connect('activate', self.handler_remove_selected)
 
 		menu_DeleteSelected = Gtk.MenuItem.new_with_label("Delete Selected Entry")
-		menu_DeleteSelected.connect('activate', self.handler_unimplemented)
-
+		menu_DeleteSelected.connect('activate', self.handler_DeleteSelectedFile)
 		menu_OpenExplorer = Gtk.MenuItem.new_with_label("Open in File Explorer")
 		menu_OpenExplorer.connect('activate', self.handler_OpenNoteInFileExplorer)
 
@@ -87,6 +86,13 @@ class JDPanelTab(Gtk.Box):
 		# --- plugin based, no selection needed ---
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
+	
+	def handler_DeleteSelectedFile(self,widget):
+		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		if issubclass(type(ent),JD_EntBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
+		ent.delete()
+		parent_iter[1]
+
 	def handler_OpenNoteInFileExplorer(self, widget):
 		# selection = self.treeView.get_selection()
 		parent_iter,ent = GetCurrentlySelected(self.treeView)
