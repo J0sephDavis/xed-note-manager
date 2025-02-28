@@ -10,7 +10,6 @@ from gi.repository import GLib
 from gi.repository import Gio
 from JD__utils import getFileFromPath, readYAML, OpenPathInFileExplorer
 from typing import List
-import weakref
 import yaml
 
 class JD_EntBase(GObject.Object):

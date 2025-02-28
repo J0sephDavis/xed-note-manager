@@ -92,13 +92,13 @@ class JDPluginConfig(GObject.Object):
 		if (old_daily_notes_path is not None or old_daily_notes_path != ''):
 			#  There WAS an old path, and it is not equal to the new path
 			if (old_daily_notes_path != daily_notes_path):
-				self.signal_library_path_removed(old_daily_notes_path)
+				self.signal_library_path_removed.emit(old_daily_notes_path)
 				if (daily_notes_path is not None and daily_notes_path != ''):
-					self.signal_library_path_added(daily_notes_path)
+					self.signal_library_path_added.emit(daily_notes_path)
 					print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {daily_notes_path}')
 					self.__yaml['daily_notes_path'] = daily_notes_path
 		elif (daily_notes_path is not None and daily_notes_path != ''): # creating a path when one previously did not exist
-			self.signal_library_path_added(daily_notes_path)
+			self.signal_library_path_added.emit(daily_notes_path)
 			self.__yaml['daily_notes_path'] = daily_notes_path
 		else:
 			self.__yaml['daily_notes_path'] = None
