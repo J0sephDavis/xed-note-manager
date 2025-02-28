@@ -1,14 +1,14 @@
-from JD__utils import DEBUG_PREFIX
+from JD__utils import DEBUG_PREFIX, OpenPathInFileExplorer
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
-from JD__entities import JD_EntLibrary,JD_EntNote
+from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 from JD_EntManager import JD_EntTracker
 from JD_PluginPrivateData import JDPluginPrivate
-from typing import List
+from typing import List,Tuple
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
@@ -22,6 +22,18 @@ from typing import List
 
 def treeStorePrintRow(store,tPath,tIter):
 	print('\t' * (tPath.get_depth()-1), store[tIter][:], sep="")
+
+def GetCurrentlySelected(treeView)->Tuple[Gtk.TreeIter,Gtk.TreeIter]:
+	selection = treeView.get_selection()
+	if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
+		print(f'{DEBUG_PREFIX} multiple selection TODO..')
+		return None
+	(model,iter)=selection.get_selected()
+	if (iter is not None):
+		entry =  model[iter][1]
+		if issubclass(type(entry), JD_EntBase):
+			return model.iter_parent(iter), entry # parent, selected
+	return None, None
 
 class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
