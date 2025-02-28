@@ -12,14 +12,11 @@ from JD__utils import getFileFromPath, readYAML, OpenPathInFileExplorer
 from typing import List
 import weakref
 
-class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a getModel() command?
-	# File
-	# File Name
-	# Display Name
-	# Sort Name?
+class JD_EntBase(GObject.Object):
 	def open_in_explorer(self): pass
 
 	def __init__(self, file:Gio.File):
+		super().__init__()
 		self.file = file;
 	
 	def get_filename(self): return self.file.get_basename()
@@ -75,6 +72,15 @@ class JD_EntNote(JD_EntBase):
 
 
 class JD_EntLibrary(JD_EntBase):
+
+	@GObject.Signal(name='note-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
+	def signal_note_added(self_library, note):
+		print(f'{DEBUG_PREFIX} Library SIGNAL - note-added')
+
+	@GObject.Signal(name='note-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
+	def signal_note_removed(self_library, note):
+		print(f'{DEBUG_PREFIX} Library SIGNAL - note-removed')
+	
 	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
 	# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
 	# https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
@@ -94,8 +100,6 @@ class JD_EntLibrary(JD_EntBase):
 		super().__init__(file=library)
 		self.notes:List[JD_EntNote] = []
 		self._get_notes(library)
-		self.note_added_callbacks = []
-		self.note_removed_callbacks = []
 
 	def open_in_explorer(self):
 		OpenPathInFileExplorer(self.get_path())
@@ -103,6 +107,11 @@ class JD_EntLibrary(JD_EntBase):
 	def GetNotes(self):
 		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
 		return self.notes;
+
+	# adds a note to the main list and emits signal
+	def __add_note(self,note:JD_EntNote):
+		self.notes.append(note)
+		self.signal_note_added.emit(note)
 
 	def _get_notes(self, library:Gio.File):
 		notes = library.enumerate_children(
@@ -113,7 +122,7 @@ class JD_EntLibrary(JD_EntBase):
 		for note in notes:
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				self.notes.append(JD_EntNote.from_GFileInfo(self.path, note))
+				self.__add_note(JD_EntNote.from_GFileInfo(self.path, note))
 	
 	def GetCreateNote(self, filename:str) -> JD_EntNote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
@@ -128,49 +137,5 @@ class JD_EntLibrary(JD_EntBase):
 		if (note.exists() == False):
 			template_data = b'this is a test template!'
 			note.create(template_data)
-		self.notes.append(note)
-		self.AnnounceNoteAdded(note)
+		self.__add_note(note)
 		return note;
-
-
-	def SubscribeNoteAdded(self, callback):
-		print(f'{DEBUG_PREFIX} subscribe note added {callback}')
-		self.note_added_callbacks.append(weakref.WeakMethod(callback))
-
-	def SubscribeNoteRemoved(self, callback):
-		print(f'{DEBUG_PREFIX} subscribe note removed {callback}')
-		self.note_removed_callbacks.append(weakref.WeakMethod(callback))
-
-	def UnsubscribeNoteAdded(self,callback):
-		print(f'{DEBUG_PREFIX} unsubscribe note added {callback}')
-		remove_me = None
-		for cb in self.note_added_callbacks:
-			if cb() == callback:
-				remove_me = cb
-				break
-		if (remove_me is None):
-			print(f'{DEBUG_PREFIX} cannot unsubscribe, no matching callback')
-			return
-		self.note_added_callbacks.remove(remove_me)
-		print(f'{DEBUG_PREFIX} unsubscribed {remove_me}')
-		
-	def UnsubscribeNoteRemoved(self,callback):
-		print(f'{DEBUG_PREFIX} unsubscribe note removed {callback}')
-		remove_me = None
-		for cb in self.note_added_callbacks:
-			if cb() == callback:
-				remove_me = cb
-				break
-		if (remove_me is None):
-			print(f'{DEBUG_PREFIX} cannot unsubscribe, no matching callback')
-			return
-		self.note_added_callbacks.remove(remove_me)
-		print(f'{DEBUG_PREFIX} unsubscribed {remove_me}')
-
-	def AnnounceNoteAdded(self, note:JD_EntNote):
-		for cb in self.note_added_callbacks:
-			cb()(self,note)
-
-	def AnnounceNoteRemoved(self,  note:JD_EntNote):
-		for cb in self.note_removed_callbacks:
-			cb()(self,note)

@@ -144,7 +144,7 @@ class JDPanelTab(Gtk.Box):
 			self.plugin_private_data.entTracker.emit('library_added', base)
 
 	
-	def handler_remove_selected(self, widget):
+	def handler_remove_selected(self, widget): # maybe rename to handler_close_library
 		selection:Gtk.TreeSelection = self.treeView.get_selection()
 		selection_mode = selection.get_mode()
 
@@ -165,10 +165,11 @@ class JDPanelTab(Gtk.Box):
 			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
 			return
 
-	def OnLibraryAdded(self,library:JD_EntLibrary): # called by entity tracker
-		library.SubscribeNoteAdded(self.OnNoteAdded)
-		library.SubscribeNoteRemoved(self.OnNoteRemoved)
+	def OnLibraryAdded(self,caller,library:JD_EntLibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
+		library.connect('note-added', self.OnNoteAdded)
+		library.connect('note-removed', self.OnNoteAdded)
+
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), library])
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.get_filename(), note])
@@ -187,7 +188,7 @@ class JDPanelTab(Gtk.Box):
 
 	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
-		model = self.get_model()
+		model = self.treeView.get_model()
 		libIter = None
 		for node in model:
 			if node[1] == library:
@@ -230,10 +231,10 @@ class JDSidePanelManager():
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
 		panel_tab = JDPanelTab(internal_name=internal_name, display_name=display_name, icon_name=icon_name,window=self.window)
 		self.side_panel.add_item(panel_tab.GetWidget(),panel_tab.display_name,panel_tab.icon_name)
-		self.entityTracker.SubscribeLibraryAdded(panel_tab.OnLibraryAdded)
-		self.entityTracker.SubscribeLibraryRemoved(panel_tab.OnLibraryRemoved)
+		self.entityTracker.connect('library-added', panel_tab.OnLibraryAdded)
+		self.entityTracker.connect('library-removed', panel_tab.OnLibraryRemoved)
 		for library in self.entityTracker.GetLibraries():
-			panel_tab.OnLibraryAdded(library)
+			panel_tab.OnLibraryAdded(None, library)
 		self.panels.append(panel_tab)
 
 	def getTab(self, tab_internal_name:str) -> JDPanelTab|None:
