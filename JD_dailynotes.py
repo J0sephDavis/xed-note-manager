@@ -7,10 +7,11 @@ from gi.repository import Gtk
 from gi.repository import PeasGtk
 from gi.repository import Xed
 
-from JD_yaml_dialog import *
-from JD__entities import *
+from JD_yaml_dialog import JDPlugin_Dialog_1, JDPlugin_FileInformation_Window
+from JD__entities import JD_EntNote
 from JD__main_config import JDPluginConfig
-from JD_sidepanel import *
+from JD_PluginPrivateData import JDPluginPriv
+from JD_sidepanel import JDSidePanelManager
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
