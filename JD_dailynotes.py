@@ -1,6 +1,4 @@
 DEBUG_PREFIX=r'JD_DEBUG '
-from datetime import datetime
-
 import gi
 gi.require_version('PeasGtk', '1.0')
 gi.require_version('Xed', '1.0')
@@ -13,7 +11,6 @@ from JD_yaml_dialog import *
 from JD__entities import *
 from JD__main_config import JDPluginConfig
 from JD_sidepanel import *
-from JD_EntManager import JD_EntTracker
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -43,7 +40,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def do_activate(self): #from WindowActivatable
 		self.views_handles = {}
 		self._insert_menu()
-		self.PluginPrivate = JDPluginPriv(self)
+		self.PluginPrivate = JDPluginPriv()
 		# Side Panel
 		self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.PluginPrivate.entTracker)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
@@ -165,32 +162,3 @@ def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
 	yaml_str = yaml.__str__()
 	print(f'{DEBUG_PREFIX} note yaml: {yaml_str}')
 	return yaml_str.find(search_str) >= 0;
-
-class JDPluginPriv():
-	def __new__(cls, *args, **kwargs):
-		if not hasattr(cls,'_self'):
-			cls._self = super(JDPluginPriv, cls).__new__(cls)
-		return cls._self
-	
-	init_trap:bool = False
-	def __init__(self, plugin):
-		print(f'{DEBUG_PREFIX} plugin:{plugin}\n{dir(plugin)}')
-		print(f'{DEBUG_PREFIX} JDPluginData -----------------------------------')
-		if (self.init_trap): return
-		self.init_trap = True
-		self.plugin_weakref = weakref.ref(JDPlugin,plugin)
-		self.pluginConfig = JDPluginConfig()
-		print(f'{DEBUG_PREFIX}\pluginConfig: {self.pluginConfig}')
-		# Entity Tracking
-		self.entTracker = JD_EntTracker()
-		print(f'{DEBUG_PREFIX}\tentTracker: {self.entTracker}')
-		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
-		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
-		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
-		self.pluginConfig.SubscribeLibraryRemoved(self.entTracker.libraryRemovedCallback)
-
-	def __del__(self):
-		self.panel_manager.deactivate()
-		self.panel_manager = None
-		self.entTracker.deactivate()
-		self.entTracker = None
