@@ -141,7 +141,7 @@ class JDPanelTab(Gtk.Box):
 		if (type(base) is JD_EntNote):
 			base.open_in_new_tab(window)
 		elif (type(base) is JD_EntLibrary):
-			self.plugin_private_data.entTracker.emit('library_added', base)
+			base.open_in_explorer()
 
 	
 	def handler_remove_selected(self, widget): # maybe rename to handler_close_library
