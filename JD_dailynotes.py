@@ -10,7 +10,7 @@ from gi.repository import Xed
 from JD_yaml_dialog import JDPlugin_Dialog_1, JDPlugin_FileInformation_Window
 from JD__entities import JD_EntNote
 from JD__main_config import JDPluginConfig
-from JD_PluginPrivateData import JDPluginPriv
+from JD_PluginPrivateData import JDPluginPrivate
 from JD_sidepanel import JDSidePanelManager
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
@@ -41,7 +41,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def do_activate(self): #from WindowActivatable
 		self.views_handles = {}
 		self._insert_menu()
-		self.PluginPrivate = JDPluginPriv()
+		self.PluginPrivate = JDPluginPrivate()
 		# Side Panel
 		self.panel_manager = JDSidePanelManager(self.window)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')

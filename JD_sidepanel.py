@@ -8,7 +8,7 @@ from JD__entities import *
 from JD__utils import DEBUG_PREFIX
 from typing import List
 from JD_EntManager import *
-from JD_PluginPrivateData import JDPluginPriv
+from JD_PluginPrivateData import JDPluginPrivate
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
@@ -26,7 +26,7 @@ def treeStorePrintRow(store,tPath,tIter):
 class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
-		self.plugin_private_data = JDPluginPriv()
+		self.plugin_private_data = JDPluginPrivate()
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 
 		self.internal_name = internal_name
@@ -191,7 +191,7 @@ class JDPanelTab(Gtk.Box):
 
 class JDSidePanelManager():
 	def __init__(self, window:Xed.Window):
-		self.PluginPrivateData = JDPluginPriv()
+		self.PluginPrivateData = JDPluginPrivate()
 		self.side_panel = window.get_side_panel()
 		self.window = window
 		self.entityTracker:JD_EntTracker = self.PluginPrivateData.entTracker

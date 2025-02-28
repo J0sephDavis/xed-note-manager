@@ -3,10 +3,10 @@ import weakref
 from JD_EntManager import *
 from JD__main_config import *
 from datetime import datetime
-class JDPluginPriv():
+class JDPluginPrivate():
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls,'_self'):
-			cls._self = super(JDPluginPriv, cls).__new__(cls)
+			cls._self = super(JDPluginPrivate, cls).__new__(cls)
 		return cls._self
 	
 	init_trap:bool = False
