@@ -121,22 +121,10 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		manager.ensure_update()
 
 	def DO_DailyNote(self,*args):
-		daily_notes_path = self.pluginConfig.GetDailyNotesPath()
-		if (daily_notes_path is None):
-			print(f'{DEBUG_PREFIX} JDPlugin:DO_DailyNote daily_notes_path is None. Cannot create daily note')
-			return;
-	
-		libraries = self.PluginPrivate.entTracker.GetLibraries()
-		for library in libraries:
-			if library.path == daily_notes_path:
-				date:datetime = datetime.now()
-				filename = date.strftime(r'%Y-%m-%d Daily Note.md')
-				print(f'{DEBUG_PREFIX} create note {filename}')
-				note = library.GetCreateNote(filename)
-				note.open_in_new_tab(self.window) # if the current buffer is an unsaved unedited note. Close the unedited blank note and replace with 
-				return
-		print(f'{DEBUG_PREFIX} JDPlugin:DO_DailyNote could not find library where path == daily_notes_path')
-		return
+		note = self.PluginPrivate.CreateDailyNote()
+		if note is None: return None
+		note.open_in_new_tab(self.window)
+		return note
 
 	def DO_spawn_dialog(self,action):
 		win = JDPlugin_Dialog_1(self.search_str, self.dialog_callback)
