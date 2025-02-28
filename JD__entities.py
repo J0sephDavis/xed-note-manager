@@ -22,8 +22,11 @@ class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a g
 	def __init__(self, file:Gio.File):
 		self.file = file;
 	
-	def getFilename(self): return self.file.get_basename()
-
+	def get_filename(self): return self.file.get_basename()
+	def get_path(self): return self.file.get_path()
+	
+	def exists(self):
+		return self.file.query_exists()
 
 class JD_EntNote(JD_EntBase):
 
