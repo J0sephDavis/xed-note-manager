@@ -42,10 +42,9 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self._insert_menu()
 		self.PluginPrivate = JDPluginPriv()
 		# Side Panel
-		self.panel_manager = JDSidePanelManager(self.window.get_side_panel(), self.PluginPrivate.entTracker)
+		self.panel_manager = JDSidePanelManager(self.window)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
-		main_tab = JDPanelTab(internal_name='main', display_name='Libraries', icon_name='folder', window=self.window)
-		self.panel_manager.addTab(main_tab)
+		self.panel_manager.addTab(internal_name='main', display_name='Libraries', icon_name='folder')
 		# window signals
 		self.window.connect('tab-added', self.tab_added)
 		self.window.connect('tab-removed', self.tab_removed)
