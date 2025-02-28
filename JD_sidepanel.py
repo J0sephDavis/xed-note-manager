@@ -6,7 +6,7 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
-from JD_EntManager import JD_EntTracker
+from JD_EntManager import EntityManager
 from JD_PluginPrivateData import JDPluginPrivate
 from typing import List,Tuple
 # (later)
@@ -57,6 +57,7 @@ class JDPanelTab(Gtk.Box):
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
 		# ------------------------ popup menu ------------------------
+		# TODO store handler IDs and remove on __del__
 		self.menu_is_open:bool = False
 		menu_RemoveSelected = Gtk.MenuItem.new_with_label("Remove selected Entry")
 		menu_RemoveSelected.connect('activate', self.handler_remove_selected)
@@ -82,8 +83,10 @@ class JDPanelTab(Gtk.Box):
 		self.menu.append(menu_OpenExplorer)
 		self.menu.append(menu_CopyYAML)
 		# --- deals with whichever library the selection is currently within ----
+		self.menu.append(Gtk.SeparatorMenuItem())
 		self.menu.append(menu_CreateFromTemplate)
 		# --- plugin based, no selection needed ---
+		self.menu.append(Gtk.SeparatorMenuItem())
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
 	
@@ -164,9 +167,9 @@ class JDPanelTab(Gtk.Box):
 		library.SubscribeNoteAdded(self.OnNoteAdded)
 		library.SubscribeNoteRemoved(self.OnNoteRemoved)
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
-		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.getFilename(), library])
+		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), library])
 		for note in library.notes:
-			self.treeView.get_model().append(node, [note.getFilename(), note])
+			self.treeView.get_model().append(node, [note.get_filename(), note])
 	
 	def OnLibraryRemoved(self,library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved path:{library.path}')
@@ -181,7 +184,7 @@ class JDPanelTab(Gtk.Box):
 			model.remove(node)
 
 	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
-		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.getFilename()}')
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
 		model = self.get_model()
 		libIter = None
 		for node in model:
@@ -190,10 +193,10 @@ class JDPanelTab(Gtk.Box):
 		if (libIter is None):
 			print(f'{DEBUG_PREFIX} CANNOT ADD NOTE. Library is not in model.')
 			assert False, "state error"
-		model.append(libIter, [note.getFilename(), note])
+		model.append(libIter, [note.get_filename(), note])
 
 	def OnNoteRemoved(self,library:JD_EntLibrary, note:JD_EntNote):
-		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {library.path} {note.getFilename()}')
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {library.path} {note.get_filename()}')
 		model = self.get_model()
 		libIter = None
 		for node in model:
@@ -217,7 +220,7 @@ class JDSidePanelManager():
 		self.PluginPrivateData = JDPluginPrivate()
 		self.side_panel = window.get_side_panel()
 		self.window = window
-		self.entityTracker:JD_EntTracker = self.PluginPrivateData.entTracker
+		self.entityTracker:EntityManager = self.PluginPrivateData.entTracker
 		self.panels:List[JDPanelTab] = []
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 

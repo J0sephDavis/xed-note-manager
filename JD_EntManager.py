@@ -3,15 +3,16 @@ from JD__entities import JD_EntLibrary, JD_EntNote
 from typing import List
 import sys
 import weakref
+from gi.repository import GObject
 
-class JD_EntTracker(): # TODO better name
-	libraries:List[JD_EntLibrary] = []
-	notes_weak:List[JD_EntNote] = []
-
-	subscribers_library_removed = [] # try weak refs here. no sense in keeping an object in existence because it has a callback attached.
-	subscribers_library_added = []
+class EntityManager(GObject.Object): # 
 
 	def __init__(self):
+		libraries:List[JD_EntLibrary] = []
+		notes_weak:List[JD_EntNote] = []
+
+		subscribers_library_removed = [] # try weak refs here. no sense in keeping an object in existence because it has a callback attached.
+		subscribers_library_added = []
 		pass
 	
 	def deactivate(self):

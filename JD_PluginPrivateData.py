@@ -1,4 +1,4 @@
-from JD_EntManager import JD_EntLibrary, JD_EntNote, JD_EntTracker
+from JD_EntManager import JD_EntLibrary, JD_EntNote, EntityManager
 from JD__main_config import JDPluginConfig
 from datetime import datetime
 from JD_dailynotes import DEBUG_PREFIX
@@ -15,7 +15,7 @@ class JDPluginPrivate():
 		self.init_trap = True
 		self.pluginConfig = JDPluginConfig()
 		# Entity Tracking
-		self.entTracker = JD_EntTracker()
+		self.entTracker = EntityManager()
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
 		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
 		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)
