@@ -51,6 +51,8 @@ class JDPanelTab(Gtk.Box):
 			Gtk.TreeViewColumn(title='name', cell_renderer=Gtk.CellRendererText(),text=0),
 			position=-1
 		)
+
+		self.libraries_handlers = {}
 		
 		self.treeView.connect("row-activated", self.handler_row_activated, window)
 		self.treeView.connect('button-release-event', self.handler_button_release)
@@ -167,19 +169,21 @@ class JDPanelTab(Gtk.Box):
 
 	def OnLibraryAdded(self,caller,library:JD_EntLibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
-		library.connect('note-added', self.OnNoteAdded)
-		library.connect('note-removed', self.OnNoteAdded)
+		handlers = self.libraries_handlers[library] = []
+		handlers.append(library.connect('note-added', self.OnNoteAdded))
+		handlers.append(library.connect('note-removed', self.OnNoteAdded))
 
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), library])
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.get_filename(), note])
 	
-	def OnLibraryRemoved(self,library:JD_EntLibrary):
+	def OnLibraryRemoved(self,caller, library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved path:{library.path}')
-		library.UnsubscribeNoteAdded(self.OnNoteAdded)
-		library.UnsubscribeNoteRemoved(self.OnNoteRemoved)
+		for handler in self.libraries_handlers[library]:
+			library.disconnect(handler)
+		del self.libraries_handlers[library]
 		removal:List[Gtk.TreeIter] = []
-		model:Gtk.TreeStore = self.get_model()
+		model:Gtk.TreeStore = self.treeView.get_model()
 		for node in model:
 			if node[1] == library:
 				removal.append(node.iter)
