@@ -4,14 +4,23 @@ gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
 from gi.repository import Gtk
 from gi.repository import Gio
+from gi.repository import GObject
 from JD__utils import readYAML, getFileFromPath
 from typing import Dict, List
 from os import getenv;
 import yaml
 
-class JDPluginConfig():
+class JDPluginConfig(GObject.Object):
 	already_init=False
 
+	@GObject.Signal(name='library-path-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(str,))
+	def signal_library_path_added(self_config, library_path:str):
+		print(f'{DEBUG_PREFIX} Config SIGNAL - library-path-added | {library_path}')
+
+	@GObject.Signal(name='library-path-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(str,))
+	def signal_library_path_removed(self_config, library_path:str):
+		print(f'{DEBUG_PREFIX} Config SIGNAL - library-path-removed | {library_path}')
+	
 	def __new__(self):
 		print(f'{DEBUG_PREFIX} JDPluginConfig __new__')
 		if not hasattr(self,'instance'):
@@ -21,6 +30,7 @@ class JDPluginConfig():
 		return self.instance
 
 	def __init__(self):
+		super().__init__()
 		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
 		if (self.already_init):
 			print(f'{DEBUG_PREFIX} JDPluginConfig INIT TRAP')
@@ -71,10 +81,10 @@ class JDPluginConfig():
 		for line in buff_text:
 			libraries.append(line) # TODO check whether they are valid directories? Maybe warn or silent fail. It's not always a big deal, especially if you use removable drives.
 			if line not in old_libraries:
-				self.EmitLibraryAdded(line)
+				self.signal_library_path_added.emit(line)
 		# -- Notify subscribers about libraries which have been removed
 		for removed_library in filter(lambda old_lib: old_lib not in libraries, old_libraries):
-			self.EmitLibraryRemoved(removed_library)
+			self.signal_library_path_removed.emit(removed_library)
 		# --- Daily Note Text Entry
 		daily_notes_path = daily_note_text_entry.get_text()
 		old_daily_notes_path = self.GetDailyNotesPath()
@@ -82,13 +92,13 @@ class JDPluginConfig():
 		if (old_daily_notes_path is not None or old_daily_notes_path != ''):
 			#  There WAS an old path, and it is not equal to the new path
 			if (old_daily_notes_path != daily_notes_path):
-				self.EmitLibraryRemoved(old_daily_notes_path)
+				self.signal_library_path_removed(old_daily_notes_path)
 				if (daily_notes_path is not None and daily_notes_path != ''):
-					self.EmitLibraryAdded(daily_notes_path)
+					self.signal_library_path_added(daily_notes_path)
 					print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {daily_notes_path}')
 					self.__yaml['daily_notes_path'] = daily_notes_path
 		elif (daily_notes_path is not None and daily_notes_path != ''): # creating a path when one previously did not exist
-			self.EmitLibraryAdded(daily_notes_path)
+			self.signal_library_path_added(daily_notes_path)
 			self.__yaml['daily_notes_path'] = daily_notes_path
 		else:
 			self.__yaml['daily_notes_path'] = None
@@ -134,23 +144,3 @@ class JDPluginConfig():
 		# --------------
 		widget.show_all()
 		return widget
-
-	def SubscribeLibraryAdded(self, callback): 
-		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY ADDED {callback}')
-		self.library_added_callbacks.append(callback)
-		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_added_callbacks}')
-
-	def SubscribeLibraryRemoved(self, callback):
-		print(f'{DEBUG_PREFIX} JDPluginConfig SUBSCRIBER LIBRARY REMOVED {callback}')
-		self.library_removed_callbacks.append(callback)
-		print(f'{DEBUG_PREFIX} JDPluginConfig {self.library_removed_callbacks}')
-
-	def EmitLibraryAdded(self, library_path:str):
-		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY ADDED: {library_path}\n{self.library_added_callbacks}')
-		for cb in self.library_added_callbacks:
-			cb(library_path)
-
-	def EmitLibraryRemoved(self, library_path:str):
-		print(f'{DEBUG_PREFIX} JDPluginConfig ANNOUNCE LIBRARY REMOVED: {library_path}\n{self.library_removed_callbacks}')
-		for cb in self.library_removed_callbacks:
-			cb(library_path)

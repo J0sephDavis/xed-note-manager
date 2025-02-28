@@ -3,7 +3,7 @@ from JD__entities import JD_EntLibrary, JD_EntNote
 from typing import List
 import sys
 import weakref
-from gi.repository import GObject
+from gi.repository import GObject, GLib
 
 class EntityManager(GObject.Object): # 
 # ------------------------------ life ------------------------
@@ -24,11 +24,11 @@ class EntityManager(GObject.Object): #
 # ------------------------------ signals -------------------------------------
 	@GObject.Signal(name='library-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_added(self_entManager, library:JD_EntLibrary):
-		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-added')
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-added {library.path}')
 
 	@GObject.Signal(name='library-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_removed(self_entManager, library:JD_EntLibrary):
-		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed')
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed {library.path}')
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
 	def GetNotes(self): return self.notes_weak
@@ -37,15 +37,19 @@ class EntityManager(GObject.Object): #
 		# the config class exists prior to the entity tracker, thus the callbacks
 		# do not exist to handle the added libraries.
 		for path in library_paths:
-			self.libraryAddedCallback(path)
+			self.libraryAddedCallback(None, path)
 # ------------------------------ callbacks -------------------------------------
-	def libraryAddedCallback(self, library_path:str):
+	def libraryAddedCallback(self, caller, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryAddedCallback: {library_path}')
-		library = JD_EntLibrary(library_path)
+		try:
+			library = JD_EntLibrary(library_path)
+		except GLib.Error as e:
+			print(f'EXCEPTION EntityManager::libraryAddedCallback({library_path}) GLib.Error({e.code}): {e.message}')
+			return
 		self.libraries.append(library)
 		self.signal_library_added.emit(library)
 
-	def libraryRemovedCallback(self, library_path:str):
+	def libraryRemovedCallback(self, caller, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryRemovedCallback: {library_path}')
 		removal:List[JD_EntLibrary] = [] #self.libraries.filter(lambda library: library.path == library_path)
 		for library in self.libraries:
