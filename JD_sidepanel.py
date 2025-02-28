@@ -39,20 +39,57 @@ class JDPanelTab(Gtk.Box):
 			position=-1
 		)
 		
-		# https://lazka.github.io/pgi-docs/Gtk-3.0/classes/TreeView.html#signals
 		self.treeView.connect("row-activated", self.handler_row_activated, window)
-
-		remove_item_button = Gtk.Button(label="Remove Selected")
-		remove_item_button.connect("clicked", self.handler_remove_selected)
 		self.treeView.connect('button-release-event', self.handler_button_release)
-		self.pack_start(remove_item_button,False,True,5)
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
+		# ------------------------ popup menu ------------------------
+		self.menu_is_open:bool = False
+		menu_RemoveSelected = Gtk.MenuItem.new_with_label("Remove selected Entry")
+		menu_RemoveSelected.connect('activate', self.handler_remove_selected)
+
+		menu_DeleteSelected = Gtk.MenuItem.new_with_label("Delete Selected Entry")
+		menu_DeleteSelected.connect('activate', self.handler_unimplemented)
+
+		menu_OpenExplorer = Gtk.MenuItem.new_with_label("Open in File Explorer")
+		menu_OpenExplorer.connect('activate', self.handler_unimplemented)
+
+		menu_CopyYAML = Gtk.MenuItem.new_with_label("Copy YAML to clipboard") # only show if the selected entity hasattr(yaml)
+		menu_CopyYAML.connect('activate', self.handler_unimplemented)
+
+		menu_CreateFromTemplate = Gtk.MenuItem.new_with_label("Create from Template") # include a submenu popout
+		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
+
+		self.menu = Gtk.Menu()
+		self.menu.append(menu_RemoveSelected)
+		self.menu.append(menu_DeleteSelected)
+		self.menu.append(menu_OpenExplorer)
+		self.menu.append(menu_CopyYAML)
+		self.menu.append(menu_CreateFromTemplate)
+		self.menu.show_all()
+		
+
+	def handler_unimplemented(self, arg):
+		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
 
 	def handler_button_release(self, view, event):
 		if (event.button != 3): return False # Propagate signal
-		print(f'{DEBUG_PREFIX} handler_button_release {view} {event}')
-		print(f'{DEBUG_PREFIX} x:{event.x} y:{event.y}')
+		print(f'{DEBUG_PREFIX} handler_button_release {view} {event} x:{event.x} y:{event.y}')
+
+		# If a right click is received, while the menu is closed,
+		# the element below the cursor will be selected (GOOD)
+		# If a right click is received, while the menu is open,
+		# the selection will not be changed (BAD)
+		
+		# because MenuShell('deactivate') is called when you right click, you can't readily know if the popup WAS open when the user right clicked.
+		# there is definitely a way, I just do not know it atm.
+		path_tuple = self.treeView.get_path_at_pos(event.x,event.y)
+		if (path_tuple is not None and path_tuple[0] is not None):
+			self.treeView.set_cursor(path_tuple[0],None,None)
+		
+		
+		self.menu.popup_at_pointer(event)
+		self.menu_is_open = True
 		return True # Do not propagate signal
 
 	def GetWidget(self): return self;
@@ -65,8 +102,7 @@ class JDPanelTab(Gtk.Box):
 		iter:Gtk.TreeIter = model.get_iter(path)
 		model[iter][1].open_in_new_tab(window)
 	
-	def handler_remove_selected(self, button): # this could probably be moved to JDSidePanelManager because it does not need to rely on instance data (which could be passed as args)
-		print(f'{DEBUG_PREFIX} handler_remove_selected')
+	def handler_remove_selected(self, widget):
 		selection:Gtk.TreeSelection = self.treeView.get_selection()
 		selection_mode = selection.get_mode()
 
