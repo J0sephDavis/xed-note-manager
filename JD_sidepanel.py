@@ -84,6 +84,7 @@ class JDPanelTab(Gtk.Box):
 		menu_CreateDailyNote.connect('activate', self.handler_CreateDailyNote, window)
 
 		self.menu = Gtk.Menu()
+		# TODO, can we use action groups here? Then we can set sensitivity on some groups so they may not appear
 		# --- deal with the currently selected entry ---
 		self.menu.append(menu_RemoveSelected)
 		self.menu.append(menu_DeleteSelected)
@@ -147,7 +148,6 @@ class JDPanelTab(Gtk.Box):
 
 	def handler_row_activated(self, treeview, path, col, window):
 		count_selection = treeview.get_selection().count_selected_rows()
-		print(f'{DEBUG_PREFIX} !!!row-ativated:\n\tpath{path}\n\tselection-size:{count_selection}')
 		if count_selection > 1: return
 		model = treeview.get_model()
 		iter:Gtk.TreeIter = model.get_iter(path)
