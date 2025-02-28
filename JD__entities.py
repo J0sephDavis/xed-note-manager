@@ -27,6 +27,14 @@ class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a g
 	
 	def exists(self):
 		return self.file.query_exists()
+	
+	def delete(self) -> bool:
+		try:
+			self.file.delete()
+		except GLib.Error as e: # Probably folder not empty.
+			print(f'EXCEPTION JD_EntBase::delete(self) GLib.Error({e.code}): {e.message}')
+		return self.exists()
+
 
 class JD_EntNote(JD_EntBase):
 
