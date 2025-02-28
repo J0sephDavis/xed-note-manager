@@ -94,10 +94,8 @@ class JDPanelTab(Gtk.Box):
 		parent_iter,ent = GetCurrentlySelected(self.treeView)
 		if issubclass(type(ent),JD_EntBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
 		ent.delete()
-		parent_iter[1]
 
 	def handler_OpenNoteInFileExplorer(self, widget):
-		# selection = self.treeView.get_selection()
 		parent_iter,ent = GetCurrentlySelected(self.treeView)
 		if (issubclass(type(ent),JD_EntBase)):
 			ent.open_in_explorer()
@@ -127,7 +125,6 @@ class JDPanelTab(Gtk.Box):
 		if (path_tuple is not None and path_tuple[0] is not None):
 			self.treeView.set_cursor(path_tuple[0],None,None)
 		
-		
 		self.menu.popup_at_pointer(event)
 		self.menu_is_open = True
 		return True # Do not propagate signal
@@ -140,7 +137,12 @@ class JDPanelTab(Gtk.Box):
 		if count_selection > 1: return
 		model = treeview.get_model()
 		iter:Gtk.TreeIter = model.get_iter(path)
-		model[iter][1].open_in_new_tab(window)
+		base = model[iter][1]
+		if (type(base) is JD_EntNote):
+			base.open_in_new_tab(window)
+		elif (type(base) is JD_EntLibrary):
+			self.plugin_private_data.entTracker.emit('library_added', base)
+
 	
 	def handler_remove_selected(self, widget):
 		selection:Gtk.TreeSelection = self.treeView.get_selection()
