@@ -8,7 +8,7 @@ from JD__entities import *
 from JD__utils import DEBUG_PREFIX
 from typing import List
 from JD_EntManager import *
-
+from JD_PluginPrivateData import JDPluginPriv
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
@@ -26,6 +26,7 @@ def treeStorePrintRow(store,tPath,tIter):
 class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
+		self.plugin_private_data = JDPluginPriv()
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 
 		self.internal_name = internal_name
@@ -176,22 +177,23 @@ class JDPanelTab(Gtk.Box):
 		
 
 class JDSidePanelManager():
-	def __init__(self, panel:Xed.Panel, entityTracker:JD_EntTracker):
-		self.entityTracker:JD_EntTracker = entityTracker
-		self.side_panel:Xed.Panel = None
-		self.panels:List[JDPanelTab] = [] # consider maing into a dictionary, key=Xed.Window, value=List[JDPanelTab]
+	def __init__(self, window:Xed.Window):
+		self.PluginPrivateData = JDPluginPriv()
+		self.side_panel = window.get_side_panel()
+		self.window = window
+		self.entityTracker:JD_EntTracker = self.PluginPrivateData.entTracker
+		self.panels:List[JDPanelTab] = []
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
-		self.side_panel = panel
 
-	def addTab(self, panelTab:JDPanelTab):
+	def addTab(self, internal_name:str, display_name:str, icon_name:str):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
-		self.side_panel.add_item(panelTab.GetWidget(), panelTab.display_name, panelTab.icon_name)
-		self.entityTracker.SubscribeLibraryAdded(panelTab.OnLibraryAdded)
-		self.entityTracker.SubscribeLibraryRemoved(panelTab.OnLibraryRemoved)
-		# add libraries
+		panel_tab = JDPanelTab(internal_name=internal_name, display_name=display_name, icon_name=icon_name,window=self.window)
+		self.side_panel.add_item(panel_tab.GetWidget(),panel_tab.display_name,panel_tab.icon_name)
+		self.entityTracker.SubscribeLibraryAdded(panel_tab.OnLibraryAdded)
+		self.entityTracker.SubscribeLibraryRemoved(panel_tab.OnLibraryRemoved)
 		for library in self.entityTracker.GetLibraries():
-			panelTab.OnLibraryAdded(library) # TODO this will become for library in config.libraries addLibrary(lib).
-		self.panels.append(panelTab)
+			panel_tab.OnLibraryAdded(library)
+		self.panels.append(panel_tab)
 
 	def getTab(self, tab_internal_name:str) -> JDPanelTab|None:
 		for panel in self.panels:
@@ -201,7 +203,6 @@ class JDSidePanelManager():
 
 	def deactivate(self):
 		print(f'{DEBUG_PREFIX} JDSidePanelManager.deactivate()')
-		# TODO, should the TreeStores be explicitly set to None? 
 		for panel in self.panels:
 			print(f'{DEBUG_PREFIX} removing panel {panel.internal_name}')
 			self.side_panel.remove_item(panel.GetWidget())
