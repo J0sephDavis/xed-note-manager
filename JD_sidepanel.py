@@ -171,7 +171,7 @@ class JDPanelTab(Gtk.Box):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
 		handlers = self.libraries_handlers[library] = []
 		handlers.append(library.connect('note-added', self.OnNoteAdded))
-		handlers.append(library.connect('note-removed', self.OnNoteAdded))
+		handlers.append(library.connect('note-removed', self.OnNoteRemoved))
 
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), library])
 		for note in library.notes:
