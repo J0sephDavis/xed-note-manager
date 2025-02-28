@@ -13,6 +13,11 @@ from typing import List
 import weakref
 
 class JD_EntBase(GObject.Object):
+	# ------------------------------ signals -------------------------------------
+	@GObject.Signal(name='file-deleted', flags=GObject.SignalFlags.RUN_LAST)
+	def signal_file_deleted(self_note):
+		print(f'{DEBUG_PREFIX} Entity SIGNAL deleted')
+	# ------------------------------ class -------------------------------------
 	def open_in_explorer(self): pass
 
 	def __init__(self, file:Gio.File):
@@ -25,16 +30,15 @@ class JD_EntBase(GObject.Object):
 	def exists(self):
 		return self.file.query_exists()
 	
-	def delete(self) -> bool:
+	def delete(self):
 		try:
 			self.file.delete()
 		except GLib.Error as e: # Probably folder not empty.
 			print(f'EXCEPTION JD_EntBase::delete(self) GLib.Error({e.code}): {e.message}')
-		return self.exists()
-
+		if self.exists() == False:
+			self.signal_file_deleted.emit()
 
 class JD_EntNote(JD_EntBase):
-
 	def __init__(self, file:Gio.File):
 		super().__init__(file=file)
 		
@@ -94,6 +98,7 @@ class JD_EntLibrary(JD_EntBase):
 	]);
 	
 	def __init__(self, library_path:str):
+		self.note_deleted_handlers = {}
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
 		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
@@ -112,6 +117,13 @@ class JD_EntLibrary(JD_EntBase):
 	def __add_note(self,note:JD_EntNote):
 		self.notes.append(note)
 		self.signal_note_added.emit(note)
+		self.note_deleted_handlers[note] = note.connect('file-deleted', self.__remove_note)
+
+	def __remove_note(self,note:JD_EntNote):
+		print(f'{DEBUG_PREFIX} remove note')
+		note.disconnect(self.note_deleted_handlers[note])
+		self.signal_note_removed.emit(note)
+		self.notes.remove(note)
 
 	def _get_notes(self, library:Gio.File):
 		notes = library.enumerate_children(
