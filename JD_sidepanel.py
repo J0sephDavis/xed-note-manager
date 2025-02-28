@@ -61,15 +61,28 @@ class JDPanelTab(Gtk.Box):
 		menu_CreateFromTemplate = Gtk.MenuItem.new_with_label("Create from Template") # include a submenu popout
 		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
 
+		menu_CreateDailyNote = Gtk.MenuItem.new_with_label("Create Daily Note") # include a submenu popout
+		menu_CreateDailyNote.connect('activate', self.handler_CreateDailyNote, window)
+
 		self.menu = Gtk.Menu()
+		# --- deal with the currently selected entry ---
 		self.menu.append(menu_RemoveSelected)
 		self.menu.append(menu_DeleteSelected)
 		self.menu.append(menu_OpenExplorer)
 		self.menu.append(menu_CopyYAML)
+		# --- deals with whichever library the selection is currently within ----
 		self.menu.append(menu_CreateFromTemplate)
+		# --- plugin based, no selection needed ---
+		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
 		
-
+	def handler_CreateDailyNote(self, widget, window):
+		print(f'{DEBUG_PREFIX} handler_CreateDailyNote')
+		assert window is not None, "window cannot be None"
+		note = self.plugin_private_data.CreateDailyNote()
+		if note is None: return
+		note.open_in_new_tab(window) # TODO, unfold libraries and move the cursor to the note.
+		
 	def handler_unimplemented(self, arg):
 		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
 
