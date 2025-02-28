@@ -48,7 +48,6 @@ class JD_EntNote(JD_EntBase):
 	def from_GFileInfo(cls, parent_dir:str, fileInfo:Gio.FileInfo):
 		path = f'{parent_dir}/{fileInfo.get_name()}'
 		return cls(getFileFromPath(path))
-		pass
 
 	def open_in_new_tab(self, window:Xed.Window): # window is the main Xed window
 		# TODO, If window is already open, focus tab instead of opening a new one.
@@ -69,6 +68,12 @@ class JD_EntNote(JD_EntBase):
 	def open_in_explorer(self):
 		OpenPathInFileExplorer(self.get_path().replace(self.get_filename(),''))
 
+	def create(self, template_data):
+		outputStream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE)
+		outputStream.write_all(template_data)
+		outputStream.close()
+
+
 class JD_EntLibrary(JD_EntBase):
 	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
 	# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
@@ -81,6 +86,7 @@ class JD_EntLibrary(JD_EntBase):
 		r'time::modified',
 		r'access::can_read',
 	]);
+	
 	def __init__(self, library_path:str):
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
@@ -112,19 +118,16 @@ class JD_EntLibrary(JD_EntBase):
 	def GetCreateNote(self, filename:str) -> JD_EntNote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
 		for note in self.notes:
-			if note.getFilename() == filename:
+			if note.get_filename() == filename:
 				print(f'{DEBUG_PREFIX} note already exists, returning {note}')
 				return note
 		# -- create note
-		file:Gio.File = getFileFromPath(f'{self.path}/{filename}')
-		if (file.query_exists()):
-			print(f'{DEBUG_PREFIX} This should not happen. If the file exists, it should have been present in self.notes')
-			assert False, "state error"
-		outputStream:Gio.FileOutputStream = file.create(Gio.FileCreateFlags.NONE)
-		template_data = b'this is a test template!'
-		outputStream.write_all(template_data)
-		outputStream.close()
-		note = JD_EntNote(file=file)
+		# check if note with this path already exists, and get a ref..
+		# If a note with the path already exists, why would 
+		note = JD_EntNote(getFileFromPath(f'{self.path}/{filename}'))
+		if (note.exists() == False):
+			template_data = b'this is a test template!'
+			note.create(template_data)
 		self.notes.append(note)
 		self.AnnounceNoteAdded(note)
 		return note;
