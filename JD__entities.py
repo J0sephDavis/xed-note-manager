@@ -1,7 +1,16 @@
-import weakref
-from gi.repository import Gio;
+from JD_dailynotes import DEBUG_PREFIX
+import gi
+gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
+from gi.repository import GObject
+from gi.repository import Gtk
 from gi.repository import Xed
-from JD__utils import *
+from gi.repository import PeasGtk
+from gi.repository import GLib
+from gi.repository import Gio
+from JD__utils import getFileFromPath, readYAML
+from typing import List
+import weakref
 
 class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a getModel() command?
 	# File

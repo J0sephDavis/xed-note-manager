@@ -1,7 +1,11 @@
-from gi.repository import Gio,GLib
-import yaml
+from JD_dailynotes import DEBUG_PREFIX
+import gi
+gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
+from gi.repository import GLib
+from gi.repository import Gio
 from typing import List
-DEBUG_PREFIX = 'JD_DEBUG'
+import yaml
 __read_buffer_length = 64
 
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:

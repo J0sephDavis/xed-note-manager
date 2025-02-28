@@ -1,5 +1,10 @@
 from JD_dailynotes import DEBUG_PREFIX
-from gi.repository import Gtk, Gio;
+import gi
+gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
+from gi.repository import Gtk
+from gi.repository import Gio
+
 # https://python-gtk-3-tutorial.readthedocs.io/en/latest/dialogs.html
 class JDPlugin_Dialog_1(Gtk.Window): 
 	def __init__(self, current_search, provided_callback):

@@ -1,6 +1,9 @@
-from JD__entities import *
+from JD_dailynotes import DEBUG_PREFIX
+from JD__entities import JD_EntLibrary, JD_EntNote
+from typing import List
 import sys
 import weakref
+
 class JD_EntTracker(): # TODO better name
 	libraries:List[JD_EntLibrary] = []
 	notes_weak:List[JD_EntNote] = []

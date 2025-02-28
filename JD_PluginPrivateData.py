@@ -1,8 +1,7 @@
-DEBUG_PREFIX='JD_DEBUG'
-import weakref
-from JD_EntManager import *
-from JD__main_config import *
+from JD_EntManager import JD_EntLibrary, JD_EntNote, JD_EntTracker
+from JD__main_config import JDPluginConfig
 from datetime import datetime
+from JD_dailynotes import DEBUG_PREFIX
 class JDPluginPrivate():
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls,'_self'):
@@ -11,14 +10,12 @@ class JDPluginPrivate():
 	
 	init_trap:bool = False
 	def __init__(self):
-		print(f'{DEBUG_PREFIX} JDPluginData -----------------------------------')
+		print(f'{DEBUG_PREFIX} __init__ JDPluginPrivate')
 		if (self.init_trap): return
 		self.init_trap = True
 		self.pluginConfig = JDPluginConfig()
-		print(f'{DEBUG_PREFIX}\pluginConfig: {self.pluginConfig}')
 		# Entity Tracking
 		self.entTracker = JD_EntTracker()
-		print(f'{DEBUG_PREFIX}\tentTracker: {self.entTracker}')
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
 		self.entTracker.libraryAddedCallback(self.pluginConfig.GetDailyNotesPath())
 		self.pluginConfig.SubscribeLibraryAdded(self.entTracker.libraryAddedCallback)

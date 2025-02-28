@@ -1,14 +1,14 @@
+from JD__utils import DEBUG_PREFIX
 import gi
+gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
-from gi.repository import GLib
-
-from JD__entities import *
-from JD__utils import DEBUG_PREFIX
-from typing import List
-from JD_EntManager import *
+from JD__entities import JD_EntLibrary,JD_EntNote
+from JD_EntManager import JD_EntTracker
 from JD_PluginPrivateData import JDPluginPrivate
+from typing import List
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them

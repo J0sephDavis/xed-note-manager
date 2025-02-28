@@ -1,17 +1,17 @@
-DEBUG_PREFIX=r'JD_DEBUG '
+DEBUG_PREFIX='JD_DEBUG'
 import gi
-gi.require_version('PeasGtk', '1.0')
 gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
 from gi.repository import GObject
 from gi.repository import Gtk
-from gi.repository import PeasGtk
 from gi.repository import Xed
-
-from JD_yaml_dialog import JDPlugin_Dialog_1, JDPlugin_FileInformation_Window
+from gi.repository import PeasGtk
+from JD_yaml_dialog import JDPlugin_Dialog_1
 from JD__entities import JD_EntNote
 from JD__main_config import JDPluginConfig
 from JD_PluginPrivateData import JDPluginPrivate
 from JD_sidepanel import JDSidePanelManager
+
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -30,7 +30,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	window = GObject.property(type=Xed.Window)
 
 	def __init__(self):
-		print(f'{DEBUG_PREFIX} ------------------ JDPlugin init -----------------')
+		print(f'{DEBUG_PREFIX} __init__ JDPlugin')
 		self.search_str = 'name' # TOBE deprecated
 		GObject.Object.__init__(self)
 		self.pluginConfig = JDPluginConfig()

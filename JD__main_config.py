@@ -1,7 +1,13 @@
-from JD__utils import *
+from JD_dailynotes import DEBUG_PREFIX
+import gi
+gi.require_version('Xed', '1.0')
+gi.require_version('PeasGtk', '1.0')
 from gi.repository import Gtk
-from os import getenv;
+from gi.repository import Gio
+from JD__utils import readYAML, getFileFromPath
 from typing import Dict, List
+from os import getenv;
+import yaml
 
 class JDPluginConfig():
 	already_init=False
