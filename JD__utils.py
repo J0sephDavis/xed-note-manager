@@ -6,6 +6,7 @@ from gi.repository import GLib
 from gi.repository import Gio
 from typing import List
 import yaml
+import subprocess
 __read_buffer_length = 64
 
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:
@@ -103,3 +104,6 @@ def PrintFileInfo(file:Gio.FileInfo):
 	print(f'{DEBUG_PREFIX} Size {size} bytes')
 	print(f'{DEBUG_PREFIX} can_read {can_read}')
 	print(f'{DEBUG_PREFIX} content_type {content_type}')
+
+def OpenPathInFileExplorer(path:str):
+	subprocess.call(["xdg-open",path])

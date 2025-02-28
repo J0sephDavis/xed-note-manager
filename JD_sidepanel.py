@@ -53,7 +53,7 @@ class JDPanelTab(Gtk.Box):
 		menu_DeleteSelected.connect('activate', self.handler_unimplemented)
 
 		menu_OpenExplorer = Gtk.MenuItem.new_with_label("Open in File Explorer")
-		menu_OpenExplorer.connect('activate', self.handler_unimplemented)
+		menu_OpenExplorer.connect('activate', self.handler_OpenNoteInFileExplorer)
 
 		menu_CopyYAML = Gtk.MenuItem.new_with_label("Copy YAML to clipboard") # only show if the selected entity hasattr(yaml)
 		menu_CopyYAML.connect('activate', self.handler_unimplemented)
@@ -75,7 +75,12 @@ class JDPanelTab(Gtk.Box):
 		# --- plugin based, no selection needed ---
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
-		
+	def handler_OpenNoteInFileExplorer(self, widget):
+		# selection = self.treeView.get_selection()
+		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		if (issubclass(type(ent),JD_EntBase)):
+			ent.open_in_explorer()
+
 	def handler_CreateDailyNote(self, widget, window):
 		print(f'{DEBUG_PREFIX} handler_CreateDailyNote')
 		assert window is not None, "window cannot be None"

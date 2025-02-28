@@ -8,7 +8,7 @@ from gi.repository import Xed
 from gi.repository import PeasGtk
 from gi.repository import GLib
 from gi.repository import Gio
-from JD__utils import getFileFromPath, readYAML
+from JD__utils import getFileFromPath, readYAML, OpenPathInFileExplorer
 from typing import List
 import weakref
 
@@ -17,6 +17,7 @@ class JD_EntBase(): # TODO: use as the base  for the TreeModel entries? With a g
 	# File Name
 	# Display Name
 	# Sort Name?
+	def open_in_explorer(self): pass
 
 	def __init__(self, file:Gio.File):
 		self.file = file;
@@ -53,6 +54,9 @@ class JD_EntNote(JD_EntBase):
 		self.file_read = True
 		self.__yaml = readYAML(self.path)
 		return self.__yaml
+	
+	def open_in_explorer(self):
+		OpenPathInFileExplorer(self.get_path().replace(self.get_filename(),''))
 
 class JD_EntLibrary(JD_EntBase):
 	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
@@ -75,6 +79,9 @@ class JD_EntLibrary(JD_EntBase):
 		self._get_notes(library)
 		self.note_added_callbacks = []
 		self.note_removed_callbacks = []
+
+	def open_in_explorer(self):
+		OpenPathInFileExplorer(self.get_path())
 
 	def GetNotes(self):
 		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
