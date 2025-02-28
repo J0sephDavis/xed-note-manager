@@ -5,6 +5,7 @@ gi.require_version('PeasGtk', '1.0')
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
+from gi.repository import Gdk
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 from JD_EntManager import EntityManager
 from JD_PluginPrivateData import JDPluginPrivate
@@ -74,7 +75,7 @@ class JDPanelTab(Gtk.Box):
 		menu_OpenExplorer.connect('activate', self.handler_OpenNoteInFileExplorer)
 
 		menu_CopyYAML = Gtk.MenuItem.new_with_label("Copy YAML to clipboard") # only show if the selected entity hasattr(yaml)
-		menu_CopyYAML.connect('activate', self.handler_unimplemented)
+		menu_CopyYAML.connect('activate', self.handler_CopyFrontmatter)
 
 		menu_CreateFromTemplate = Gtk.MenuItem.new_with_label("Create from Template") # include a submenu popout
 		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
@@ -96,6 +97,13 @@ class JDPanelTab(Gtk.Box):
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
 	
+	def handler_CopyFrontmatter(self,widget):
+		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		if (type(ent) != JD_EntNote): return
+		frontmatter:str = ent.get_yaml_as_str()
+		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+		clipboard.set_text(frontmatter, -1)
+
 	def handler_DeleteSelectedFile(self,widget):
 		parent_iter,ent = GetCurrentlySelected(self.treeView)
 		if issubclass(type(ent),JD_EntBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)

@@ -11,6 +11,7 @@ from gi.repository import Gio
 from JD__utils import getFileFromPath, readYAML, OpenPathInFileExplorer
 from typing import List
 import weakref
+import yaml
 
 class JD_EntBase(GObject.Object):
 	# ------------------------------ signals -------------------------------------
@@ -63,8 +64,14 @@ class JD_EntNote(JD_EntBase):
 		if (self.file_read):
 			return self.__yaml;
 		self.file_read = True
-		self.__yaml = readYAML(self.path)
+		self.__yaml = readYAML(self.get_path())
 		return self.__yaml
+		
+	def get_yaml_as_str(self) -> str|None:
+		print(f'{DEBUG_PREFIX} get_frontmatter (str)')
+		_yaml = self.get_yaml()
+		if _yaml is None: return None
+		return yaml.dump(_yaml)
 	
 	def open_in_explorer(self):
 		OpenPathInFileExplorer(self.get_path().replace(self.get_filename(),''))
