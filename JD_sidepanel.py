@@ -182,30 +182,25 @@ class JDPanelTab(Gtk.Box):
 			self.treeView.get_model().append(node, [note.get_filename(), note])
 	
 	def OnLibraryRemoved(self,caller, library:JD_EntLibrary):
-		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved path:{library.path}')
+		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved {library}')
 		for handler in self.libraries_handlers[library]:
 			library.disconnect(handler)
 		del self.libraries_handlers[library]
-		removal:List[Gtk.TreeIter] = []
 		model:Gtk.TreeStore = self.treeView.get_model()
-		for node in model:
-			if node[1] == library:
-				removal.append(node.iter)
-		for node in removal:
-			model.remove(node)
+		removal:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
+		for iter in removal:
+			model.remove(iter)
 
 	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
 		model = self.treeView.get_model()
-		libIter = None
-		libraries:List[Gtk.TreeIter] = []
-		model.foreach(find_matching_entity, library, libraries)
-		for lib in libraries: model.append(lib, [note.get_filename(), note])
+		libraries:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
+		for lib in libraries:
+			model.append(lib, [note.get_filename(), note])
 
-	def OnNoteRemoved(self, calling_library:JD_EntLibrary, note:JD_EntNote):
-		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {calling_library.path} {note.get_filename()}')
+	def OnNoteRemoved(self, calling_library:JD_EntLibrary|None, note:JD_EntNote):
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {note.get_filename()}')
 		model = self.treeView.get_model()
-		removal:List[Gtk.TreeIter] = []
-		model.foreach(find_matching_entity, note,removal)
+		removal:List[Gtk.TreeIter] = get_entites_from_model(model, note, ModelTraverseFlags.RET_ITER)
 		for iter in removal:
 			model.remove(iter)
