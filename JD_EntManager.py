@@ -37,19 +37,19 @@ class EntityManager(GObject.Object): #
 		# the config class exists prior to the entity tracker, thus the callbacks
 		# do not exist to handle the added libraries.
 		for path in library_paths:
-			self.libraryAddedCallback(None, path)
+			self.AddLibraryPath(None, path)
 # ------------------------------ callbacks -------------------------------------
-	def libraryAddedCallback(self, caller, library_path:str):
-		print(f'{DEBUG_PREFIX} libraryAddedCallback: {library_path}')
+	def AddLibraryPath(self, caller, library_path:str):
+		print(f'{DEBUG_PREFIX} AddLibrary: {library_path}')
 		try:
 			library = JD_EntLibrary(library_path)
 		except GLib.Error as e:
-			print(f'EXCEPTION EntityManager::libraryAddedCallback({library_path}) GLib.Error({e.code}): {e.message}')
+			print(f'EXCEPTION EntityManager::AddLibrary({library_path}) GLib.Error({e.code}): {e.message}')
 			return
 		self.libraries.append(library)
 		self.signal_library_added.emit(library)
 
-	def libraryRemovedCallback(self, caller, library_path:str):
+	def RemoveLibraryPath(self, caller, library_path:str):
 		print(f'{DEBUG_PREFIX} libraryRemovedCallback: {library_path}')
 		removal:List[JD_EntLibrary] = [] #self.libraries.filter(lambda library: library.path == library_path)
 		for library in self.libraries:
@@ -59,4 +59,3 @@ class EntityManager(GObject.Object): #
 		for library in removal:
 			self.libraries.remove(library)
 			self.signal_library_removed.emit(library)
-			# print(f'{DEBUG_PREFIX} refcount of library({library.path}): {sys.getrefcount(library)}')

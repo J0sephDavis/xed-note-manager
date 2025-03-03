@@ -17,9 +17,9 @@ class JDPluginPrivate():
 		# Entity Tracking
 		self.entTracker = EntityManager()
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
-		self.entTracker.libraryAddedCallback(None, self.pluginConfig.GetDailyNotesPath())
-		self.pluginConfig.connect('library-path-added',self.entTracker.libraryAddedCallback)
-		self.pluginConfig.connect('library-path-removed',self.entTracker.libraryRemovedCallback)
+		self.entTracker.AddLibraryPath(None, self.pluginConfig.GetDailyNotesPath())
+		self.pluginConfig.connect('library-path-added',self.entTracker.AddLibraryPath)
+		self.pluginConfig.connect('library-path-removed',self.entTracker.RemoveLibraryPath)
 
 	def __del__(self):
 		self.panel_manager.deactivate()
