@@ -20,25 +20,6 @@ from typing import List,Tuple
 # - getWidget()
 # - getStore()
 
-def treeStorePrintRow(store,tPath,tIter):
-	print('\t' * (tPath.get_depth()-1), store[tIter][:], sep="")
-
-# used with TreeModel.foreach()
-def find_matching_entity(model, path, iter, entity, out_list:List):
-		if model[iter][1] == entity: out_list.append(iter)
-
-def GetCurrentlySelected(treeView)->Tuple[Gtk.TreeIter,Gtk.TreeIter]:
-	selection = treeView.get_selection()
-	if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
-		print(f'{DEBUG_PREFIX} multiple selection TODO..')
-		return None
-	(model,iter)=selection.get_selected()
-	if (iter is not None):
-		entry =  model[iter][1]
-		if issubclass(type(entry), JD_EntBase):
-			return model.iter_parent(iter), entry # parent, selected
-	return None, None
-
 class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
@@ -97,20 +78,32 @@ class JDPanelTab(Gtk.Box):
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
 	
+	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,Gtk.TreeIter]:
+		selection = self.treeView.get_selection()
+		if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
+			print(f'{DEBUG_PREFIX} multiple selection TODO..')
+			return None
+		(model,iter)=selection.get_selected()
+		if (iter is not None):
+			entry =  model[iter][1]
+			if issubclass(type(entry), JD_EntBase):
+				return model.iter_parent(iter), entry # parent, selected
+		return None, None
+	
 	def handler_CopyFrontmatter(self,widget):
-		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		parent_iter,ent = self.GetCurrentlySelected()
 		if (type(ent) != JD_EntNote): return
 		frontmatter:str = ent.get_yaml_as_str()
 		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 		clipboard.set_text(frontmatter, -1)
 
 	def handler_DeleteSelectedFile(self,widget):
-		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		parent_iter,ent = self.GetCurrentlySelected()
 		if issubclass(type(ent),JD_EntBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
 		ent.delete()
 
 	def handler_OpenNoteInFileExplorer(self, widget):
-		parent_iter,ent = GetCurrentlySelected(self.treeView)
+		parent_iter,ent = self.GetCurrentlySelected()
 		if (issubclass(type(ent),JD_EntBase)):
 			ent.open_in_explorer()
 
