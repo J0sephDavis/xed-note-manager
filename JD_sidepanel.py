@@ -8,6 +8,7 @@ from gi.repository import Xed
 from gi.repository import Gdk
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 from JD_PluginPrivateData import JDPluginPrivate
+from Panels.TreeViewUtils import get_entites_from_model, ModelTraverseFlags
 from typing import List,Tuple
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
