@@ -113,8 +113,24 @@ class JDPanelTab(Gtk.Box):
 		assert window is not None, "window cannot be None"
 		note = self.plugin_private_data.CreateDailyNote()
 		if note is None: return
-		note.open_in_new_tab(window) # TODO, unfold libraries and move the cursor to the note.
-		
+		note.open_in_new_tab(window)
+		self.ScrollToNote(note)
+	
+	def handler_NoteFocus(self, caller, note:JD_EntNote):
+		self.ScrollToNote(note)
+
+	def ScrollToNote(self,note:JD_EntNote): # maybe this should become the result of a signal being received? note-request-focus(note)
+		model = self.treeView.get_model()
+		flags:ModelTraverseFlags = ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH
+		found:List[Gtk.TreePath] = get_entites_from_model(model,note,flags)
+		if (len(found) < 1): return
+		path:Gtk.TreePath = found[0]
+		libpath:Gtk.TreePath = path.copy()
+		if (libpath.up() == False): raise Exception('state error. cannot get library from note\'s path')
+		self.treeView.expand_row(path=libpath, open_all=False)
+		self.treeView.get_selection().select_path(path)
+		self.treeView.scroll_to_cell(found[0],None,False)
+
 	def handler_unimplemented(self, arg):
 		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
 
