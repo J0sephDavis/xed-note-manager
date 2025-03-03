@@ -166,7 +166,9 @@ class JDPanelTab(Gtk.Box):
 		elif (type(base) is JD_EntLibrary):
 			base.open_in_explorer()
 	
-	def handler_remove_selected(self, widget): # maybe rename to handler_close_library
+	# DEBUG only. Remove in PROD
+	# removes the selected entity from the model (removes ALL of them)
+	def handler_remove_selected(self, widget):
 		selection:Gtk.TreeSelection = self.treeView.get_selection()
 		selection_mode = selection.get_mode()
 
@@ -176,15 +178,17 @@ class JDPanelTab(Gtk.Box):
 		
 		model,selected_iter = selection.get_selected()
 		entry = model[selected_iter]
-		if (selected_iter is None):
-			print(f'{DEBUG_PREFIX} handler_remove_selected, no entries selected.')
-			return
-		print(f'{DEBUG_PREFIX} {type(entry)} SELECTED[0] {entry[0]} [1]: {entry[1]}')
-		if (type(entry[1]) is JD_EntLibrary):
-			print(f'{DEBUG_PREFIX} removing library {entry[0]}')
-			self.treeView.get_model().remove(selected_iter)
+		entry_ent = entry[1]
+		if (selected_iter is None): return
+
+		print(f'{DEBUG_PREFIX} {type(entry)} SELECTED[0] {entry[0]} [1]: {entry_ent}')
+		if (type(entry_ent) is JD_EntLibrary):
+			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
+		elif (type(entry_ent) is JD_EntNote):
+			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
 		else:
-			print(f'{DEBUG_PREFIX} selected entry is not a library {entry[0]}, {type(entry[1])}')
+			print(f'{DEBUG_PREFIX} remove_selected unhandled entity')
+			# model.remove(selected_iter) # only remove the SELECTED iter
 			return
 
 	def OnLibraryAdded(self,caller,library:JD_EntLibrary): # called by entity tracker
