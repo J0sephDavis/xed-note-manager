@@ -35,12 +35,17 @@ class JDPluginPrivate():
 				return library
 		return None
 	
-	def CreateDailyNote(self) -> JD_EntNote|None:
+	def CreateDailyNote(self) -> JD_EntNote:
 		lib = self.GetDailyNotesLibrary()
 		if lib is None: return None
-		
 		date:datetime = datetime.now()
-		filename = date.strftime(r'%Y-%m-%d Daily Note.md')
-		print(f'{DEBUG_PREFIX} create note {filename}')
-		note = lib.GetCreateNote(filename)
+		date_str:str = date.strftime(r'%Y-%m-%d')
+		for note in lib.GetNotes():
+			filename = note.get_filename()
+			print(f'{filename}')
+			if filename.startswith(date_str):
+				print(f'NOTE FOUND: {filename}')
+				return note
+		note = lib.GetCreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
+		print(f'{DEBUG_PREFIX} CreateDailyNote date_str:{note.get_filename()}')
 		return note
