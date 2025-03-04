@@ -1,10 +1,6 @@
 from JD__utils import DEBUG_PREFIX
 from enum import Flag,auto
-from typing import List, Tuple
-import gi
-from gi.repository import Gtk
-from JD__entities import JD_EntBase
-
+from typing import List
 # def treeStorePrintRow(store,tPath,tIter):
 #	print('\t' * (tPath.get_depth()-1), store[tIter][:], sep="")
 
