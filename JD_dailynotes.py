@@ -74,7 +74,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		popup.append(debugItem)
 
 		dailyNoteItem = Gtk.MenuItem(label='Create/GOTO Daily Note')
-		dailyNoteItem.connect('activate',self.DO_DailyNote)
+		dailyNoteItem.connect('activate',self.DailyNoteRoutine)
 		dailyNoteItem.show()
 		popup.append(dailyNoteItem)
 	
@@ -83,7 +83,6 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		for val in self.views_handles:
 			print(f'{DEBUG_PREFIX}\t{val}\t{self.views_handles[val]}')
 		print(f'----------------------------------------------')
-	
 
 	def do_deactivate(self): #from WindowActivatable
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
@@ -107,7 +106,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
 				# --
 				("JDPlugin_Create_DailyNote", None, _("Create a daily note"), # type: ignore
-	 			None, _("Creates (or opens) todays daily note"), self.DO_DailyNote), # type: ignore
+	 			None, _("Creates (or opens) todays daily note"), self.DailyNoteRoutine), # type: ignore
 			])
 		manager.insert_action_group(self._action_group, -1)
 		self._ui_id = manager.add_ui_from_string(menubar_ui_string)
@@ -119,9 +118,12 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		manager.remove_action_group(self._action_group)
 		manager.ensure_update()
 
-	def DO_DailyNote(self,*args):
-		note = self.PluginPrivate.CreateDailyNote()
-		if note is None: return None
+	# requests a daily note to be created
+	# request the panel current side pane with the note to be focussed
+	# opens the note in a new tab
+	def DailyNoteRoutine(self,*args) -> JD_EntNote:
+		note:JD_EntNote = self.PluginPrivate.CreateDailyNote()
+		self.panel_manager.handle_note_focus_request(note)
 		note.open_in_new_tab(self.window)
 		return note
 
