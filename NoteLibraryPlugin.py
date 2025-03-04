@@ -76,7 +76,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		debugItem.show()
 		popup.append(debugItem)
 
-		dailyNoteItem = Gtk.MenuItem(label='Create/GOTO Daily Note')
+		dailyNoteItem = Gtk.MenuItem(label='Create Daily Note')
 		dailyNoteItem.connect('activate',self.DailyNoteRoutine)
 		dailyNoteItem.show()
 		popup.append(dailyNoteItem)
@@ -109,7 +109,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 				("JDPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
 	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
 				# --
-				("JDPlugin_Create_DailyNote", None, _("Create a daily note"), # type: ignore
+				("JDPlugin_Create_DailyNote", None, _("Create Daily Note"), # type: ignore
 	 			None, _("Creates (or opens) todays daily note"), self.DailyNoteRoutine), # type: ignore
 			])
 		manager.insert_action_group(self._action_group, -1)
