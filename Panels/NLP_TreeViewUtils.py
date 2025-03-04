@@ -1,6 +1,7 @@
 from NLP_Utils import DEBUG_PREFIX
 from enum import Flag,auto
 from typing import List
+import weakref
 # def treeStorePrintRow(store,tPath,tIter):
 #	print('\t' * (tPath.get_depth()-1), store[tIter][:], sep="")
 
@@ -42,6 +43,8 @@ def get_entites_from_model(model, entity, flags:ModelTraverseFlags) -> List:
 	return found
 
 def del_entries_from_model(model,entity) -> int:
+	if (type(entity) is not weakref.ref):
+		print(f'{DEBUG_PREFIX} WARNING (del_entries_from_model) entity is not a reference. Did you mean to remove a reference? ({type(entity)})')
 	removal:List = get_entites_from_model(model,entity,ModelTraverseFlags.RET_ITER)
 	for r in removal:
 		model.remove(r)
