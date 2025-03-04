@@ -1,4 +1,5 @@
 build:
+	rm -r ~/.local/share/xed/plugins/NoteLibraryPlugin/*
 	mkdir -p ~/.local/share/xed/plugins/NoteLibraryPlugin
 	cp -r /media/d_drive/VisualStudioCode\ Projects/custom-xed-plugin/* ~/.local/share/xed/plugins/NoteLibraryPlugin
 run: build
