@@ -9,7 +9,7 @@ from gi.repository import Gdk
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 from JD_PluginPrivateData import JDPluginPrivate
 from Panels.TreeViewUtils import get_entites_from_model, ModelTraverseFlags
-from typing import List,Tuple
+from typing import List,Tuple,Dict
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
@@ -22,9 +22,18 @@ from typing import List,Tuple
 # - getStore()
 
 class JDPanelTab(Gtk.Box):
-	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window):
+	def __del__(self):
+		for obj in self.handles:
+			if (type(obj) is JD_EntLibrary):
+				self.OnLibraryRemoved(self,obj)
+				continue
+			for handle in self.handles[obj]:
+				obj.disconnect(handle)
+		
+	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window,ent_tracker:EntityManager):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
 		self.plugin_private_data = JDPluginPrivate()
+		self.handles:Dict[GObject.Object,List[int]] = {} # Should probably use weakrefs to objects..
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 
 		self.internal_name = internal_name
@@ -37,13 +46,14 @@ class JDPanelTab(Gtk.Box):
 			Gtk.TreeViewColumn(title='name', cell_renderer=Gtk.CellRendererText(),text=0),
 			position=-1
 		)
-
-		self.libraries_handlers = {}
-		
 		self.treeView.connect("row-activated", self.handler_row_activated, window)
 		self.treeView.connect('button-release-event', self.handler_button_release)
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
+		# ------------------------ entity tracker handles ------------------------
+		tracker_handles = self.handles[ent_tracker] = []
+		tracker_handles.append(ent_tracker.connect('library-added',self.OnLibraryAdded))
+		tracker_handles.append(ent_tracker.connect('library-removed', self.OnLibraryRemoved))
 		# ------------------------ popup menu ------------------------
 		# TODO store handler IDs and remove on __del__
 		self.menu_is_open:bool = False
@@ -62,7 +72,7 @@ class JDPanelTab(Gtk.Box):
 		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
 
 		menu_CreateDailyNote = Gtk.MenuItem.new_with_label("Create Daily Note") # include a submenu popout
-		menu_CreateDailyNote.connect('activate', self.handler_CreateDailyNote, window)
+		menu_CreateDailyNote.connect('activate', self.handler_CreateDailyNote)
 
 		self.menu = Gtk.Menu()
 		# TODO, can we use action groups here? Then we can set sensitivity on some groups so they may not appear
@@ -193,7 +203,7 @@ class JDPanelTab(Gtk.Box):
 
 	def OnLibraryAdded(self,caller,library:JD_EntLibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
-		handlers = self.libraries_handlers[library] = []
+		handlers = self.handles[library] = []
 		handlers.append(library.connect('note-added', self.OnNoteAdded))
 		handlers.append(library.connect('note-removed', self.OnNoteRemoved))
 
@@ -203,9 +213,9 @@ class JDPanelTab(Gtk.Box):
 	
 	def OnLibraryRemoved(self,caller, library:JD_EntLibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved {library}')
-		for handler in self.libraries_handlers[library]:
+		for handler in self.handles[library]:
 			library.disconnect(handler)
-		del self.libraries_handlers[library]
+		del self.handles[library]
 		model:Gtk.TreeStore = self.treeView.get_model()
 		removal:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
 		for iter in removal:
