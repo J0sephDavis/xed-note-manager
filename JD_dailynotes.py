@@ -28,7 +28,7 @@ menubar_ui_string = """<ui>
 class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
 	__gtype_name__ = "JDPlugin"
 	window = GObject.property(type=Xed.Window)
-
+	PluginPrivate = JDPluginPrivate()
 	def __init__(self):
 		print(f'{DEBUG_PREFIX} __init__ JDPlugin')
 		self.search_str = 'name' # TOBE deprecated
@@ -41,7 +41,6 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	def do_activate(self): #from WindowActivatable
 		self.views_handles = {}
 		self._insert_menu()
-		self.PluginPrivate = JDPluginPrivate()
 		# Side Panel
 		self.panel_manager = JDSidePanelManager(self.window)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
