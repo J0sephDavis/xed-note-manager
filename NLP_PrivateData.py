@@ -1,16 +1,16 @@
 import gi
 from gi.repository import GObject
 
-from JD_EntManager import EntityManager
-from JD__entities import JD_EntLibrary, JD_EntNote
-from JD__main_config import JDPluginConfig
+from NLP_EntityManager import EntityManager
+from NLP_Entities import ELibrary, ENote
+from NLP_Config import NLPConfig
 from datetime import datetime
-from JD_dailynotes import DEBUG_PREFIX
+from NoteLibraryPlugin import DEBUG_PREFIX
 
-class JDPluginPrivate():
+class PrivateData():
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls,'_self'):
-			cls._self = super(JDPluginPrivate, cls).__new__(cls)
+			cls._self = super(PrivateData, cls).__new__(cls)
 		return cls._self
 	
 	init_trap:bool = False
@@ -18,7 +18,7 @@ class JDPluginPrivate():
 		print(f'{DEBUG_PREFIX} __init__ JDPluginPrivate')
 		if (self.init_trap): return
 		self.init_trap = True
-		self.pluginConfig = JDPluginConfig()
+		self.pluginConfig = NLPConfig()
 		# Entity Tracking
 		self.entTracker = EntityManager()
 		self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
@@ -30,7 +30,7 @@ class JDPluginPrivate():
 		self.entTracker.deactivate()
 		self.entTracker = None
 
-	def GetDailyNotesLibrary(self) -> JD_EntLibrary|None:
+	def GetDailyNotesLibrary(self) -> ELibrary|None:
 		daily_notes_path = self.pluginConfig.GetDailyNotesPath()
 		libraries = self.entTracker.GetLibraries()
 		for library in libraries:
@@ -38,12 +38,12 @@ class JDPluginPrivate():
 				return library
 		return None
 	
-	def CreateDailyNote(self) -> JD_EntNote:
+	def CreateDailyNote(self) -> ENote:
 		lib = self.GetDailyNotesLibrary()
 		if lib is None: return None
 		date:datetime = datetime.now()
 		date_str:str = date.strftime(r'%Y-%m-%d')
-		found_note:JD_EntNote|None = None
+		found_note:ENote|None = None
 		for note in lib.GetNotes():
 			filename = note.get_filename()
 			print(f'{filename}')

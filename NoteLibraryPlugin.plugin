@@ -1,7 +1,7 @@
 [Plugin]
 Loader=python3
-Module=JD_dailynotes
+Module=NoteLibraryPlugin
 IAge=3
-Name=Daily Notes - Name WIP
+Name=Note Library Plugin and Daily Notes
 Description=Search the YAML frontmatter of documents in your notes folder. Create new daily notes
-Authors=J0sephDavis
+Authors=github/J0sephDavis

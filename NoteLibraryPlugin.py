@@ -1,4 +1,4 @@
-DEBUG_PREFIX='JD_DEBUG'
+DEBUG_PREFIX='NLP_DEBUG'
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -6,11 +6,11 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import PeasGtk
-from JD_yaml_dialog import JDPlugin_Dialog_1
-from JD__entities import JD_EntNote
-from JD__main_config import JDPluginConfig
-from JD_PluginPrivateData import JDPluginPrivate
-from Panels.JD_PanelManager import JDSidePanelManager
+from NLP_yaml_dialog import JDPlugin_Dialog_1
+from NLP_Entities import ENote
+from NLP_Config import NLPConfig
+from NLP_PrivateData import PrivateData
+from Panels.NLP_PanelManager import NLP_SidePanelManager
 
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
@@ -25,42 +25,42 @@ menubar_ui_string = """<ui>
 	</menubar>
 </ui>"""
 
-class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
+class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
 	__gtype_name__ = "JDPlugin"
 	window = GObject.property(type=Xed.Window)
-	PluginPrivate = JDPluginPrivate()
+	PluginPrivate = PrivateData()
 	def __init__(self):
 		print(f'{DEBUG_PREFIX} __init__ JDPlugin')
 		self.search_str = 'name' # TOBE deprecated
 		GObject.Object.__init__(self)
-		self.pluginConfig = JDPluginConfig()
+		self.pluginConfig = NLPConfig()
 
-	def do_update_state(self):
-		print(f'{DEBUG_PREFIX} window:{self.window}')
+	# def do_update_state(self):
+	# 	print(f'{DEBUG_PREFIX} window:{self.window}')
 
 	def do_activate(self): #from WindowActivatable
 		self.views_handles = {}
 		self._insert_menu()
 		# Side Panel
-		self.panel_manager = JDSidePanelManager(self.window, self.DailyNoteRoutine)
+		self.panel_manager = NLP_SidePanelManager(self.window, self.DailyNoteRoutine)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
 		self.panel_manager.addTab(internal_name='main', display_name='Libraries', icon_name='folder')
-		# window signals
+		# window signals (TODO disconnect)
 		self.window.connect('tab-added', self.tab_added)
 		self.window.connect('tab-removed', self.tab_removed)
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
 
 	def tab_added(self, window, tab):
-		print(f'{DEBUG_PREFIX} TAB_ADDED\twindow:{window}\ttab:{tab}')
+		# print(f'{DEBUG_PREFIX} TAB_ADDED\twindow:{window}\ttab:{tab}')
 		self.views_handles[tab] = tab.get_view().connect("populate-popup", self.view_populate_popup)
-		print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
+		# print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
 
 	def tab_removed(self, window, tab):
-		print(f'{DEBUG_PREFIX} TAB_REMOVED\twindow:{window}\ttab:{tab}')
+		# print(f'{DEBUG_PREFIX} TAB_REMOVED\twindow:{window}\ttab:{tab}')
 		view = tab.get_view()
 		view.disconnect(self.views_handles[tab])
 		del self.views_handles[tab]
-		print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
+		# print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
 
 	def view_populate_popup(self, view:Xed.View, popup:Gtk.Menu):
 		print(f'{DEBUG_PREFIX} Plugin PopupMenu')
@@ -121,8 +121,8 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 	# requests a daily note to be created
 	# request the panel current side pane with the note to be focussed
 	# opens the note in a new tab
-	def DailyNoteRoutine(self,*args) -> JD_EntNote:
-		note:JD_EntNote = self.PluginPrivate.CreateDailyNote()
+	def DailyNoteRoutine(self,*args) -> ENote:
+		note:ENote = self.PluginPrivate.CreateDailyNote()
 		self.panel_manager.handle_note_focus_request(note)
 		note.open_in_new_tab(self.window)
 		return note
@@ -142,7 +142,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 			if SearchNoteYaml(search, note):
 				note.open_in_new_tab(self.window)
 
-def SearchNoteYaml(search_str, note:JD_EntNote) -> bool:
+def SearchNoteYaml(search_str, note:ENote) -> bool:
 	print(f'{DEBUG_PREFIX} processing note: {note.filename}')
 	yaml = note.get_yaml()
 	if yaml is None:

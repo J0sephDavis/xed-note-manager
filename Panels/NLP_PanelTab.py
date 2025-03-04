@@ -1,4 +1,4 @@
-from JD__utils import DEBUG_PREFIX
+from NLP_Utils import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -6,10 +6,10 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import Gdk
-from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
-from JD_EntManager import EntityManager
-from JD_PluginPrivateData import JDPluginPrivate
-from Panels.TreeViewUtils import get_entites_from_model, ModelTraverseFlags
+from NLP_Entities import ELibrary, ENote, EBase
+from NLP_EntityManager import EntityManager
+from NLP_PrivateData import PrivateData
+from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags
 from typing import List,Tuple,Dict
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
@@ -22,10 +22,10 @@ from typing import List,Tuple,Dict
 # - getWidget()
 # - getStore()
 
-class JDPanelTab(Gtk.Box):
+class PanelTab(Gtk.Box):
 	def __del__(self):
 		for obj in self.handles:
-			if (type(obj) is JD_EntLibrary):
+			if (type(obj) is ELibrary):
 				self.OnLibraryRemoved(self,obj)
 				continue
 			for handle in self.handles[obj]:
@@ -34,7 +34,7 @@ class JDPanelTab(Gtk.Box):
 	def __init__(self, internal_name:str, display_name:str, icon_name:str,
 			  window:Xed.Window,ent_tracker:EntityManager, delegate_DailyNoteRoutine):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
-		self.plugin_private_data = JDPluginPrivate()
+		self.plugin_private_data = PrivateData()
 		self.handles:Dict[GObject.Object,List[int]] = {} # Should probably use weakrefs to objects..
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 
@@ -99,7 +99,7 @@ class JDPanelTab(Gtk.Box):
 		(model,iter)=selection.get_selected()
 		if (iter is not None):
 			entry =  model[iter][1]
-			if issubclass(type(entry), JD_EntBase):
+			if issubclass(type(entry), EBase):
 				return model.iter_parent(iter), entry # parent, selected
 		return None, None
 	
@@ -113,30 +113,30 @@ class JDPanelTab(Gtk.Box):
 		self.treeView.scroll_to_cell(note_path,None,False)
 		self.treeView.get_selection().select_path(note_path)
 
-	def GetNote(self, note:JD_EntNote) -> Gtk.TreePath|None:
+	def GetNote(self, note:ENote) -> Gtk.TreePath|None:
 		found =  self.get_entities(note=note,flags=ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH)
 		if len(found) < 1:
 			return None
 		return found[0]
 
-	def get_entities(self, note:JD_EntNote, flags:ModelTraverseFlags = ModelTraverseFlags.RET_ITER):
+	def get_entities(self, note:ENote, flags:ModelTraverseFlags = ModelTraverseFlags.RET_ITER):
 		return get_entites_from_model(self.treeView.get_model(), note, flags)
 
 	def handler_CopyFrontmatter(self,widget):
 		parent_iter,ent = self.GetCurrentlySelected()
-		if (type(ent) != JD_EntNote): return
+		if (type(ent) != ENote): return
 		frontmatter:str = ent.get_yaml_as_str()
 		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 		clipboard.set_text(frontmatter, -1)
 
 	def handler_DeleteSelectedFile(self,widget):
 		parent_iter,ent = self.GetCurrentlySelected()
-		if issubclass(type(ent),JD_EntBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
+		if issubclass(type(ent),EBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
 		ent.delete()
 
 	def handler_OpenNoteInFileExplorer(self, widget):
 		parent_iter,ent = self.GetCurrentlySelected()
-		if (issubclass(type(ent),JD_EntBase)):
+		if (issubclass(type(ent),EBase)):
 			ent.open_in_explorer()
 
 	def handler_CreateDailyNote(self, widget):
@@ -174,9 +174,9 @@ class JDPanelTab(Gtk.Box):
 		model = treeview.get_model()
 		iter:Gtk.TreeIter = model.get_iter(path)
 		base = model[iter][1]
-		if (type(base) is JD_EntNote):
+		if (type(base) is ENote):
 			base.open_in_new_tab(window)
-		elif (type(base) is JD_EntLibrary):
+		elif (type(base) is ELibrary):
 			base.open_in_explorer()
 	
 	# DEBUG only. Remove in PROD
@@ -195,16 +195,16 @@ class JDPanelTab(Gtk.Box):
 		if (selected_iter is None): return
 
 		print(f'{DEBUG_PREFIX} {type(entry)} SELECTED[0] {entry[0]} [1]: {entry_ent}')
-		if (type(entry_ent) is JD_EntLibrary):
+		if (type(entry_ent) is ELibrary):
 			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
-		elif (type(entry_ent) is JD_EntNote):
+		elif (type(entry_ent) is ENote):
 			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
 		else:
 			print(f'{DEBUG_PREFIX} remove_selected unhandled entity')
 			# model.remove(selected_iter) # only remove the SELECTED iter
 			return
 
-	def OnLibraryAdded(self,caller,library:JD_EntLibrary): # called by entity tracker
+	def OnLibraryAdded(self,caller,library:ELibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
 		handlers = self.handles[library] = []
 		handlers.append(library.connect('note-added', self.OnNoteAdded))
@@ -214,7 +214,7 @@ class JDPanelTab(Gtk.Box):
 		for note in library.notes:
 			self.treeView.get_model().append(node, [note.get_filename(), note])
 	
-	def OnLibraryRemoved(self,caller, library:JD_EntLibrary):
+	def OnLibraryRemoved(self,caller, library:ELibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved {library}')
 		for handler in self.handles[library]:
 			library.disconnect(handler)
@@ -224,14 +224,14 @@ class JDPanelTab(Gtk.Box):
 		for iter in removal:
 			model.remove(iter)
 
-	def OnNoteAdded(self,library:JD_EntLibrary, note:JD_EntNote):
+	def OnNoteAdded(self,library:ELibrary, note:ENote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
 		model = self.treeView.get_model()
 		libraries:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
 		for lib in libraries:
 			model.append(lib, [note.get_filename(), note])
 
-	def OnNoteRemoved(self, calling_library:JD_EntLibrary|None, note:JD_EntNote):
+	def OnNoteRemoved(self, calling_library:ELibrary|None, note:ENote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {note.get_filename()}')
 		model = self.treeView.get_model()
 		removal:List[Gtk.TreeIter] = get_entites_from_model(model, note, ModelTraverseFlags.RET_ITER)

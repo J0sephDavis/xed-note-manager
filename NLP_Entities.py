@@ -1,4 +1,4 @@
-from JD_dailynotes import DEBUG_PREFIX
+from NoteLibraryPlugin import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -8,11 +8,11 @@ from gi.repository import Xed
 from gi.repository import PeasGtk
 from gi.repository import GLib
 from gi.repository import Gio
-from JD__utils import getFileFromPath, readYAML, OpenPathInFileExplorer
+from NLP_Utils import getFileFromPath, readYAML, OpenPathInFileExplorer
 from typing import List
 import yaml
 
-class JD_EntBase(GObject.Object):
+class EBase(GObject.Object):
 	# ------------------------------ signals -------------------------------------
 	@GObject.Signal(name='file-deleted', flags=GObject.SignalFlags.RUN_LAST)
 	def signal_file_deleted(self_note):
@@ -34,11 +34,11 @@ class JD_EntBase(GObject.Object):
 		try:
 			self.file.delete()
 		except GLib.Error as e: # Probably folder not empty.
-			print(f'EXCEPTION JD_EntBase::delete(self) GLib.Error({e.code}): {e.message}')
+			print(f'EXCEPTION EBase::delete(self) GLib.Error({e.code}): {e.message}')
 		if self.exists() == False:
 			self.signal_file_deleted.emit()
 
-class JD_EntNote(JD_EntBase):
+class ENote(EBase):
 	def __init__(self, file:Gio.File):
 		super().__init__(file=file)
 		
@@ -81,7 +81,7 @@ class JD_EntNote(JD_EntBase):
 		outputStream.close()
 
 
-class JD_EntLibrary(JD_EntBase):
+class ELibrary(EBase):
 
 	@GObject.Signal(name='note-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_note_added(self_library, note):
@@ -109,7 +109,7 @@ class JD_EntLibrary(JD_EntBase):
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
 		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
 		super().__init__(file=library)
-		self.notes:List[JD_EntNote] = []
+		self.notes:List[ENote] = []
 		self._get_notes(library)
 
 	def open_in_explorer(self):
@@ -120,12 +120,12 @@ class JD_EntLibrary(JD_EntBase):
 		return self.notes;
 
 	# adds a note to the main list and emits signal
-	def __add_note(self,note:JD_EntNote):
+	def __add_note(self,note:ENote):
 		self.notes.append(note)
 		self.signal_note_added.emit(note)
 		self.note_deleted_handlers[note] = note.connect('file-deleted', self.__remove_note)
 
-	def __remove_note(self,note:JD_EntNote):
+	def __remove_note(self,note:ENote):
 		print(f'{DEBUG_PREFIX} remove note')
 		note.disconnect(self.note_deleted_handlers[note])
 		self.signal_note_removed.emit(note)
@@ -140,9 +140,9 @@ class JD_EntLibrary(JD_EntBase):
 		for note in notes:
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				self.__add_note(JD_EntNote.from_GFileInfo(self.path, note))
+				self.__add_note(ENote.from_GFileInfo(self.path, note))
 	
-	def GetCreateNote(self, filename:str) -> JD_EntNote:
+	def GetCreateNote(self, filename:str) -> ENote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
 		for note in self.notes:
 			if note.get_filename() == filename:
@@ -151,7 +151,7 @@ class JD_EntLibrary(JD_EntBase):
 		# -- create note
 		# check if note with this path already exists, and get a ref..
 		# If a note with the path already exists, why would 
-		note = JD_EntNote(getFileFromPath(f'{self.path}/{filename}'))
+		note = ENote(getFileFromPath(f'{self.path}/{filename}'))
 		if (note.exists() == False):
 			template_data = b'this is a test template!'
 			note.create(template_data)

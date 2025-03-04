@@ -1,16 +1,16 @@
-from JD_dailynotes import DEBUG_PREFIX
+from NoteLibraryPlugin import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
 from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GObject
-from JD__utils import readYAML, getFileFromPath
+from NLP_Utils import readYAML, getFileFromPath
 from typing import Dict, List
 from os import getenv;
 import yaml
 
-class JDPluginConfig(GObject.Object):
+class NLPConfig(GObject.Object):
 	already_init=False
 
 	@GObject.Signal(name='library-path-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(str,))

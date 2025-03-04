@@ -1,4 +1,4 @@
-from JD__utils import DEBUG_PREFIX
+from NLP_Utils import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -7,26 +7,26 @@ from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import Gdk
 
-from JD_PluginPrivateData import JDPluginPrivate
-from Panels.JD_sidepanel import JDPanelTab
-from JD_EntManager import EntityManager
-from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
+from NLP_PrivateData import PrivateData
+from Panels.NLP_PanelTab import PanelTab
+from NLP_EntityManager import EntityManager
+from NLP_Entities import ELibrary, ENote, EBase
 
 from typing import List,Tuple
 
-class JDSidePanelManager():
+class NLP_SidePanelManager():
 	def __init__(self, window:Xed.Window, delegate_DailyNoteRoutine):
-		self.PluginPrivateData = JDPluginPrivate()
+		self.PluginPrivateData = PrivateData()
 		self.side_panel = window.get_side_panel()
 		self.window = window
 		self.delegate_DailyNoteRoutine = delegate_DailyNoteRoutine
 		self.entityTracker:EntityManager = self.PluginPrivateData.entTracker
-		self.panels:List[JDPanelTab] = []
+		self.panels:List[PanelTab] = []
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 
 	def addTab(self, internal_name:str, display_name:str, icon_name:str):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
-		panel_tab = JDPanelTab(
+		panel_tab = PanelTab(
 			internal_name=internal_name,
 			display_name=display_name,
 			icon_name=icon_name,
@@ -38,7 +38,7 @@ class JDSidePanelManager():
 			panel_tab.OnLibraryAdded(None, library)
 		self.panels.append(panel_tab)
 
-	def getTab(self, tab_internal_name:str) -> JDPanelTab|None:
+	def getTab(self, tab_internal_name:str) -> PanelTab|None:
 		for panel in self.panels:
 			if panel.internal_name == tab_internal_name:
 				return panel
@@ -54,7 +54,7 @@ class JDSidePanelManager():
 		self.panels.clear()
 		self.side_panel = None
 
-	def handle_note_focus_request(self, note:JD_EntNote):
+	def handle_note_focus_request(self, note:ENote):
 		print(f'{DEBUG_PREFIX} handle_note_focus_request')
 		panel = None
 		found_note:Gtk.TreePath = None

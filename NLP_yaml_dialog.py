@@ -1,4 +1,4 @@
-from JD_dailynotes import DEBUG_PREFIX
+from NoteLibraryPlugin import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
