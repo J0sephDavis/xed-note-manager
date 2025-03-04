@@ -103,7 +103,7 @@ class PanelTab(Gtk.Box):
 		self.menu.append(menu_CreateDailyNote)
 		self.menu.show_all()
 	
-	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,Gtk.TreeIter]:
+	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
 		selection = self.treeView.get_selection()
 		if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
 			print(f'{DEBUG_PREFIX} multiple selection TODO..')
@@ -111,8 +111,9 @@ class PanelTab(Gtk.Box):
 		(model,iter)=selection.get_selected()
 		if (iter is not None):
 			entry =  model[iter][1]
-			if issubclass(type(entry), EBase):
-				return model.iter_parent(iter), entry # parent, selected
+			if issubclass(type(entry()), EBase):
+				retval =  (model.iter_parent(iter), entry) # parent, selected
+				return retval
 		return None, None
 	
 	# Expands the library. Scrolls to the note. Selects the note
