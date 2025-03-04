@@ -5,3 +5,4 @@ IAge=3
 Name=Note Library Plugin and Daily Notes
 Description=Search the YAML frontmatter of documents in your notes folder. Create new daily notes
 Authors=github/J0sephDavis
+Version=0.0.1
