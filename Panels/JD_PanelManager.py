@@ -25,10 +25,8 @@ class JDSidePanelManager():
 
 	def addTab(self, internal_name:str, display_name:str, icon_name:str):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
-		panel_tab = JDPanelTab(internal_name=internal_name, display_name=display_name, icon_name=icon_name,window=self.window)
+		panel_tab = JDPanelTab(internal_name=internal_name, display_name=display_name, icon_name=icon_name,window=self.window, ent_tracker=self.entityTracker)
 		self.side_panel.add_item(panel_tab.GetWidget(),panel_tab.display_name,panel_tab.icon_name)
-		self.entityTracker.connect('library-added', panel_tab.OnLibraryAdded)
-		self.entityTracker.connect('library-removed', panel_tab.OnLibraryRemoved)
 		for library in self.entityTracker.GetLibraries():
 			panel_tab.OnLibraryAdded(None, library)
 		self.panels.append(panel_tab)
@@ -49,13 +47,16 @@ class JDSidePanelManager():
 		self.panels.clear()
 		self.side_panel = None
 
-	# def handle_note_focus_request(self, caller, note:JD_EntNote):
-	# 	# 1. Find the first panel tab which contains this note.
-	# 	for panel in self.panels:
-	# 		notes = panel.
-	# 	# 2. Focus the tab
-	# 	# 3. Unfold the library
-	# 	# 4. Focus the note
-
-	# 	# - Open the note in a new tab
-	# 	pass
+	def handle_note_focus_request(self, note:JD_EntNote):
+		print(f'{DEBUG_PREFIX} handle_note_focus_request')
+		panel = None
+		found_note:Gtk.TreePath = None
+		for panel in self.panels:
+			found_note = panel.GetNote(note)
+			if (found_note is not None):
+				break
+		if (found_note is None):
+			print(f'{DEBUG_PREFIX} handle_note_focus_request no notes found')
+			return
+		self.side_panel.activate_item(panel) # switches to the tab
+		panel.FocusNote(found_note)
