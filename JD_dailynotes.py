@@ -42,7 +42,7 @@ class JDPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #ma
 		self.views_handles = {}
 		self._insert_menu()
 		# Side Panel
-		self.panel_manager = JDSidePanelManager(self.window)
+		self.panel_manager = JDSidePanelManager(self.window, self.DailyNoteRoutine)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
 		self.panel_manager.addTab(internal_name='main', display_name='Libraries', icon_name='folder')
 		# window signals

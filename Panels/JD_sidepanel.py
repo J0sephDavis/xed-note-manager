@@ -31,7 +31,8 @@ class JDPanelTab(Gtk.Box):
 			for handle in self.handles[obj]:
 				obj.disconnect(handle)
 		
-	def __init__(self, internal_name:str, display_name:str, icon_name:str, window:Xed.Window,ent_tracker:EntityManager):
+	def __init__(self, internal_name:str, display_name:str, icon_name:str,
+			  window:Xed.Window,ent_tracker:EntityManager, delegate_DailyNoteRoutine):
 		print(f'{DEBUG_PREFIX} PanelTab __init__')
 		self.plugin_private_data = JDPluginPrivate()
 		self.handles:Dict[GObject.Object,List[int]] = {} # Should probably use weakrefs to objects..
@@ -73,7 +74,7 @@ class JDPanelTab(Gtk.Box):
 		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
 
 		menu_CreateDailyNote = Gtk.MenuItem.new_with_label("Create Daily Note") # include a submenu popout
-		menu_CreateDailyNote.connect('activate', self.handler_CreateDailyNote)
+		menu_CreateDailyNote.connect('activate', delegate_DailyNoteRoutine)
 
 		self.menu = Gtk.Menu()
 		# TODO, can we use action groups here? Then we can set sensitivity on some groups so they may not appear

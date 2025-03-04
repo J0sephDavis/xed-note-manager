@@ -15,17 +15,24 @@ from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 from typing import List,Tuple
 
 class JDSidePanelManager():
-	def __init__(self, window:Xed.Window):
+	def __init__(self, window:Xed.Window, delegate_DailyNoteRoutine):
 		self.PluginPrivateData = JDPluginPrivate()
 		self.side_panel = window.get_side_panel()
 		self.window = window
+		self.delegate_DailyNoteRoutine = delegate_DailyNoteRoutine
 		self.entityTracker:EntityManager = self.PluginPrivateData.entTracker
 		self.panels:List[JDPanelTab] = []
 		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 
 	def addTab(self, internal_name:str, display_name:str, icon_name:str):
 		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
-		panel_tab = JDPanelTab(internal_name=internal_name, display_name=display_name, icon_name=icon_name,window=self.window, ent_tracker=self.entityTracker)
+		panel_tab = JDPanelTab(
+			internal_name=internal_name,
+			display_name=display_name,
+			icon_name=icon_name,
+			window=self.window,
+			ent_tracker=self.entityTracker,
+			delegate_DailyNoteRoutine=self.delegate_DailyNoteRoutine)
 		self.side_panel.add_item(panel_tab.GetWidget(),panel_tab.display_name,panel_tab.icon_name)
 		for library in self.entityTracker.GetLibraries():
 			panel_tab.OnLibraryAdded(None, library)
