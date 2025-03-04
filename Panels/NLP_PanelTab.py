@@ -43,7 +43,7 @@ class PanelTab(Gtk.Box):
 		self.plugin_private_data = None
 		
 	def __init__(self, internal_name:str, display_name:str, icon_name:str,
-			  window:Xed.Window,ent_tracker:EntityManager, delegate_DailyNoteRoutine):
+				window:Xed.Window,ent_tracker:EntityManager, delegate_DailyNoteRoutine):
 		self.plugin_private_data = PrivateData()
 		self.handles:Dict[ref[GObject.Object],List[int]] = {}
 		super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
@@ -133,19 +133,19 @@ class PanelTab(Gtk.Box):
 		return found[0]
 
 	def handler_CopyFrontmatter(self,widget):
-		parent_iter,ent = self.GetCurrentlySelected()
+		ent = self.GetCurrentlySelected()[1]()
 		if (type(ent) != ENote): return
 		frontmatter:str = ent.get_yaml_as_str()
 		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 		clipboard.set_text(frontmatter, -1)
 
 	def handler_DeleteSelectedFile(self,widget):
-		parent_iter,ent = self.GetCurrentlySelected()
+		ent = self.GetCurrentlySelected()[1]()
 		if issubclass(type(ent),EBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
 		ent.delete()
 
 	def handler_OpenNoteInFileExplorer(self, widget):
-		parent_iter,ent = self.GetCurrentlySelected()
+		ent = self.GetCurrentlySelected()[1]()
 		if (issubclass(type(ent),EBase)):
 			ent.open_in_explorer()
 
@@ -177,11 +177,9 @@ class PanelTab(Gtk.Box):
 	def GetWidget(self): return self;
 
 	def handler_row_activated(self, treeview, path, col, window):
-		count_selection = treeview.get_selection().count_selected_rows()
-		if count_selection > 1: return
 		model = treeview.get_model()
 		iter:Gtk.TreeIter = model.get_iter(path)
-		base = model[iter][1]
+		base = model[iter][1]()
 		if (type(base) is ENote):
 			base.open_in_new_tab(window)
 		elif (type(base) is ELibrary):
@@ -190,40 +188,28 @@ class PanelTab(Gtk.Box):
 	# DEBUG only. Remove in PROD
 	# removes the selected entity from the model (removes ALL of them)
 	def handler_remove_selected(self, widget):
-		selection:Gtk.TreeSelection = self.treeView.get_selection()
-		selection_mode = selection.get_mode()
-
-		if (selection_mode != Gtk.SelectionMode.SINGLE and selection_mode != Gtk.SelectionMode.BROWSE):
-			print(f'{DEBUG_PREFIX} handler_remove_selected get_selected() only supports single selection or browse selection. Use get_selected_rows()\n{selection_mode}')
-			return
-		
-		model,selected_iter = selection.get_selected()
-		entry = model[selected_iter]
-		entry_ent = entry[1]
-		if (selected_iter is None): return
-
+		entry_ent = self.GetCurrentlySelected()[1]()
+		if (entry_ent is None): return
 		if (type(entry_ent) is ELibrary):
 			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
 		elif (type(entry_ent) is ENote):
 			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
 		else:
-			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry)} SELECTED[0] {entry[0]} [1]: {entry_ent}')
-			# model.remove(selected_iter) # only remove the SELECTED iter
+			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
 			return
 
 	def OnLibraryAdded(self,caller,library:ELibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
 		self.__add_library_signals(ref(library))
-		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), library]) # TODO use a weakref to library in model
+		node:Gtk.TreeIter = self.treeView.get_model().append(None, [library.get_filename(), ref(library)]) # TODO use a weakref to library in model
 		for note in library.notes:
-			self.treeView.get_model().append(node, [note.get_filename(), note]) # TODO use a weakref to note in model
+			self.treeView.get_model().append(node, [note.get_filename(), ref(note)]) # TODO use a weakref to note in model
 
 	def OnLibraryRemoved(self,caller, library:ELibrary):
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryRemoved {library}')
-		self.__remove_library_signals(ref(library))
-		
-		model:Gtk.TreeStore = self.treeView.get_model()
-		del_entries_from_model(model,library)
+		lib_ref = ref(library)
+		self.__remove_library_signals(lib_ref)
+		del_entries_from_model(self.treeView.get_model(),lib_ref)
 
 	def __add_library_signals(self,library_ref:ref[ELibrary]):
 		if library_ref in self.handles:
@@ -244,11 +230,11 @@ class PanelTab(Gtk.Box):
 	def OnNoteAdded(self,library:ELibrary, note:ENote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
 		model = self.treeView.get_model()
-		libraries:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
+		libraries:List[Gtk.TreeIter] = get_entites_from_model(model,ref(library),ModelTraverseFlags.RET_ITER)
 		for lib in libraries:
-			model.append(lib, [note.get_filename(), note])
+			model.append(lib, [note.get_filename(), ref(note)])
 
 	def OnNoteRemoved(self, calling_library:ELibrary|None, note:ENote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {note.get_filename()}')
 		model = self.treeView.get_model()
-		del_entries_from_model(model,note)
+		del_entries_from_model(model,ref(note))
