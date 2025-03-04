@@ -10,7 +10,6 @@ class EntityManager(GObject.Object): #
 	def __init__(self):
 		super().__init__()
 		self.libraries:List[ELibrary] = []
-		self.notes_weak:List[ENote] = []
 
 		self.subscribers_library_removed = [] # try weak refs here. no sense in keeping an object in existence because it has a callback attached.
 		self.subscribers_library_added = []
@@ -20,7 +19,6 @@ class EntityManager(GObject.Object): #
 		self.subscribers_library_removed.clear()
 		self.subscribers_library_added.clear()
 		self.libraries.clear()
-		self.notes_weak.clear()
 # ------------------------------ signals -------------------------------------
 	@GObject.Signal(name='library-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_added(self_entManager, library:ELibrary):
@@ -31,7 +29,6 @@ class EntityManager(GObject.Object): #
 		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed {library.path}')
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
-	def GetNotes(self): return self.notes_weak
 	def AddLibraries(self, library_paths:List[str]):
 		# this is called during JDPlugin.on_activate()
 		# the config class exists prior to the entity tracker, thus the callbacks
