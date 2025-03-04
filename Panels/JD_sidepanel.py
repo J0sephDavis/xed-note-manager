@@ -7,6 +7,7 @@ from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import Gdk
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
+from JD_EntManager import EntityManager
 from JD_PluginPrivateData import JDPluginPrivate
 from Panels.TreeViewUtils import get_entites_from_model, ModelTraverseFlags
 from typing import List,Tuple,Dict
@@ -101,6 +102,25 @@ class JDPanelTab(Gtk.Box):
 				return model.iter_parent(iter), entry # parent, selected
 		return None, None
 	
+	# Expands the library. Scrolls to the note. Selects the note
+	def FocusNote(self, note_path:Gtk.TreePath) -> None:
+		library_path:Gtk.TreePath = note_path.copy()
+		if (library_path.up() == False):
+			print(f'{DEBUG_PREFIX} FocusNote, could not get library_path')
+			return
+		self.treeView.expand_row(path=library_path,open_all=False)
+		self.treeView.scroll_to_cell(note_path,None,False)
+		self.treeView.get_selection().select_path(note_path)
+
+	def GetNote(self, note:JD_EntNote) -> Gtk.TreePath|None:
+		found =  self.get_entities(note=note,flags=ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH)
+		if len(found) < 1:
+			return None
+		return found[0]
+
+	def get_entities(self, note:JD_EntNote, flags:ModelTraverseFlags = ModelTraverseFlags.RET_ITER):
+		return get_entites_from_model(self.treeView.get_model(), note, flags)
+
 	def handler_CopyFrontmatter(self,widget):
 		parent_iter,ent = self.GetCurrentlySelected()
 		if (type(ent) != JD_EntNote): return
@@ -118,28 +138,10 @@ class JDPanelTab(Gtk.Box):
 		if (issubclass(type(ent),JD_EntBase)):
 			ent.open_in_explorer()
 
-	def handler_CreateDailyNote(self, widget, window):
+	def handler_CreateDailyNote(self, widget):
 		print(f'{DEBUG_PREFIX} handler_CreateDailyNote')
-		assert window is not None, "window cannot be None"
 		note = self.plugin_private_data.CreateDailyNote()
-		if note is None: return
-		note.open_in_new_tab(window)
-		self.ScrollToNote(note)
-	
-	def handler_NoteFocus(self, caller, note:JD_EntNote):
-		self.ScrollToNote(note)
 
-	def ScrollToNote(self,note:JD_EntNote): # maybe this should become the result of a signal being received? note-request-focus(note)
-		model = self.treeView.get_model()
-		flags:ModelTraverseFlags = ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH
-		found:List[Gtk.TreePath] = get_entites_from_model(model,note,flags)
-		if (len(found) < 1): return
-		path:Gtk.TreePath = found[0]
-		libpath:Gtk.TreePath = path.copy()
-		if (libpath.up() == False): raise Exception('state error. cannot get library from note\'s path')
-		self.treeView.expand_row(path=libpath, open_all=False)
-		self.treeView.get_selection().select_path(path)
-		self.treeView.scroll_to_cell(found[0],None,False)
 
 	def handler_unimplemented(self, arg):
 		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
