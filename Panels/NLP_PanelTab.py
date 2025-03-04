@@ -48,6 +48,8 @@ class PanelTab(Gtk.Box):
 			Gtk.TreeViewColumn(title='name', cell_renderer=Gtk.CellRendererText(),text=0),
 			position=-1
 		)
+		model = self.treeView.get_model()
+		model.set_sort_column_id(0, Gtk.SortType.DESCENDING)
 		self.treeView.connect("row-activated", self.handler_row_activated, window)
 		self.treeView.connect('button-release-event', self.handler_button_release)
 		self.pack_start(self.treeView,True,True,0)
