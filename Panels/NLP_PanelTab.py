@@ -9,7 +9,7 @@ from gi.repository import Gdk
 from NLP_Entities import ELibrary, ENote, EBase
 from NLP_EntityManager import EntityManager
 from NLP_PrivateData import PrivateData
-from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags
+from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
 from typing import List,Tuple,Dict
 from weakref import ref
 # (later)
@@ -225,9 +225,7 @@ class PanelTab(Gtk.Box):
 		self.__remove_library_signals(ref(library))
 		
 		model:Gtk.TreeStore = self.treeView.get_model()
-		removal:List[Gtk.TreeIter] = get_entites_from_model(model,library,ModelTraverseFlags.RET_ITER)
-		for iter in removal:
-			model.remove(iter)
+		del_entries_from_model(model,library)
 
 	def __add_library_signals(self,library_ref:ref[ELibrary]):
 		if library_ref in self.handles:
@@ -255,6 +253,4 @@ class PanelTab(Gtk.Box):
 	def OnNoteRemoved(self, calling_library:ELibrary|None, note:ENote):
 		print(f'{DEBUG_PREFIX} PanelTab OnNoteRemoved {note.get_filename()}')
 		model = self.treeView.get_model()
-		removal:List[Gtk.TreeIter] = get_entites_from_model(model, note, ModelTraverseFlags.RET_ITER)
-		for iter in removal:
-			model.remove(iter)
+		del_entries_from_model(model,note)

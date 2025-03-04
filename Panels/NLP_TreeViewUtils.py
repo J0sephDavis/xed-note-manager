@@ -40,3 +40,8 @@ def get_entites_from_model(model, entity, flags:ModelTraverseFlags) -> List:
 	found:List = []
 	model.foreach(__create_find_function(found,flags),entity)
 	return found
+
+def del_entries_from_model(model,entity) -> int:
+	removal:List = get_entites_from_model(model,entity,ModelTraverseFlags.RET_ITER)
+	for r in removal:
+		model.remove(r)
