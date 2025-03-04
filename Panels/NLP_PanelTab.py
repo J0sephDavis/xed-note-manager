@@ -127,13 +127,10 @@ class PanelTab(Gtk.Box):
 		self.treeView.get_selection().select_path(note_path)
 
 	def GetNote(self, note:ENote) -> Gtk.TreePath|None:
-		found =  self.get_entities(note=note,flags=ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH)
+		found = get_entites_from_model(self.treeView.get_model(), ref(note), ModelTraverseFlags.EARLY_RETURN | ModelTraverseFlags.RET_PATH)
 		if len(found) < 1:
 			return None
 		return found[0]
-
-	def get_entities(self, note:ENote, flags:ModelTraverseFlags = ModelTraverseFlags.RET_ITER):
-		return get_entites_from_model(self.treeView.get_model(), note, flags)
 
 	def handler_CopyFrontmatter(self,widget):
 		parent_iter,ent = self.GetCurrentlySelected()
