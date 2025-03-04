@@ -1,85 +1,10 @@
 from NoteLibraryPlugin import DEBUG_PREFIX
-import gi
-gi.require_version('Xed', '1.0')
-gi.require_version('PeasGtk', '1.0')
 from gi.repository import GObject
-from gi.repository import Gtk
-from gi.repository import Xed
-from gi.repository import PeasGtk
-from gi.repository import GLib
 from gi.repository import Gio
-from NLP_Utils import getFileFromPath, readYAML, OpenPathInFileExplorer
+from NLP_Utils import getFileFromPath, OpenPathInFileExplorer
 from typing import List
-import yaml
-
-class EBase(GObject.Object):
-	# ------------------------------ signals -------------------------------------
-	@GObject.Signal(name='file-deleted', flags=GObject.SignalFlags.RUN_LAST)
-	def signal_file_deleted(self_note):
-		print(f'{DEBUG_PREFIX} Entity SIGNAL deleted')
-	# ------------------------------ class -------------------------------------
-	def open_in_explorer(self): pass
-
-	def __init__(self, file:Gio.File):
-		super().__init__()
-		self.file = file;
-	
-	def get_filename(self): return self.file.get_basename()
-	def get_path(self): return self.file.get_path()
-	
-	def exists(self):
-		return self.file.query_exists()
-	
-	def delete(self):
-		try:
-			self.file.delete()
-		except GLib.Error as e: # Probably folder not empty.
-			print(f'EXCEPTION EBase::delete(self) GLib.Error({e.code}): {e.message}')
-		if self.exists() == False:
-			self.signal_file_deleted.emit()
-
-class ENote(EBase):
-	def __init__(self, file:Gio.File):
-		super().__init__(file=file)
-		
-		self.file_read:bool = False # True ONLY if readYAML has been called already.
-		self.__yaml = None
-
-	@classmethod
-	def from_GFileInfo(cls, parent_dir:str, fileInfo:Gio.FileInfo):
-		path = f'{parent_dir}/{fileInfo.get_name()}'
-		return cls(getFileFromPath(path))
-
-	def open_in_new_tab(self, window:Xed.Window): # window is the main Xed window
-		# TODO, If window is already open, focus tab instead of opening a new one.
-		# Make configurable? Or accelerator defined, like ctrl+activate opens regardless.
-		window.create_tab_from_location(
-			self.file,
-			None,0,0,True
-		)
-	
-	def get_yaml(self) -> object:
-		print(f'{DEBUG_PREFIX} get_frontmatter')
-		if (self.file_read):
-			return self.__yaml;
-		self.file_read = True
-		self.__yaml = readYAML(self.get_path())
-		return self.__yaml
-		
-	def get_yaml_as_str(self) -> str|None:
-		print(f'{DEBUG_PREFIX} get_frontmatter (str)')
-		_yaml = self.get_yaml()
-		if _yaml is None: return None
-		return yaml.dump(_yaml)
-	
-	def open_in_explorer(self):
-		OpenPathInFileExplorer(self.get_path().replace(self.get_filename(),''))
-
-	def create(self, template_data):
-		outputStream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE)
-		outputStream.write_all(template_data)
-		outputStream.close()
-
+from Entities.NLP_EntityBase import EBase
+from Entities.NLP_EntityNote import ENote
 
 class ELibrary(EBase):
 

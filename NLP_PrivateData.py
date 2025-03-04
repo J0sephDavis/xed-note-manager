@@ -2,7 +2,8 @@ import gi
 from gi.repository import GObject
 
 from Entities.NLP_EntityManager import EntityManager
-from NLP_Entities import ELibrary, ENote
+from Entities.NLP_EntityLibrary import ELibrary
+from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from datetime import datetime
 from NoteLibraryPlugin import DEBUG_PREFIX

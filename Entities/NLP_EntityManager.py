@@ -1,8 +1,6 @@
 from NoteLibraryPlugin import DEBUG_PREFIX
-from NLP_Entities import ELibrary, ENote
+from Entities.NLP_EntityLibrary import ELibrary
 from typing import List
-import sys
-import weakref
 from gi.repository import GObject, GLib
 
 class EntityManager(GObject.Object): # 

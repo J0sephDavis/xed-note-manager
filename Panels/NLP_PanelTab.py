@@ -6,7 +6,9 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import Gdk
-from NLP_Entities import ELibrary, ENote, EBase
+from Entities.NLP_EntityLibrary import ELibrary
+from Entities.NLP_EntityNote import ENote
+from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityManager import EntityManager
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model

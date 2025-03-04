@@ -7,7 +7,7 @@ from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import PeasGtk
 from NLP_yaml_dialog import JDPlugin_Dialog_1
-from NLP_Entities import ENote
+from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from NLP_PrivateData import PrivateData
 from Panels.NLP_PanelManager import NLP_SidePanelManager
