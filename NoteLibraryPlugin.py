@@ -38,6 +38,11 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 	# def do_update_state(self):
 	# 	print(f'{DEBUG_PREFIX} window:{self.window}')
 
+	def __del__(self):
+		print(f'{DEBUG_PREFIX}----- __del__ ---')
+		self.PluginPrivate = None
+		self.panel_manager = None
+
 	def do_activate(self): #from WindowActivatable
 		self.views_handles = {}
 		self._insert_menu()
@@ -51,16 +56,14 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
 
 	def tab_added(self, window, tab):
-		# print(f'{DEBUG_PREFIX} TAB_ADDED\twindow:{window}\ttab:{tab}')
 		self.views_handles[tab] = tab.get_view().connect("populate-popup", self.view_populate_popup)
-		# print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
 
 	def tab_removed(self, window, tab):
-		# print(f'{DEBUG_PREFIX} TAB_REMOVED\twindow:{window}\ttab:{tab}')
+		if tab not in self.views_handles:
+			return
 		view = tab.get_view()
-		view.disconnect(self.views_handles[tab])
+		view.disconnect(self.views_handles[tab])	
 		del self.views_handles[tab]
-		# print(f'{DEBUG_PREFIX} {type(self.views_handles)} current_views: {self.views_handles}')
 
 	def view_populate_popup(self, view:Xed.View, popup:Gtk.Menu):
 		print(f'{DEBUG_PREFIX} Plugin PopupMenu')
@@ -88,6 +91,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		print(f"{DEBUG_PREFIX}plugin stopped for {self.window}")
 		self._remove_menu()
 		self._action_group = None
+		self.panel_manager.deactivate()
 		
 	def do_create_configure_widget(self): # from PeasGtk.Configurable
 		return self.pluginConfig.do_create_configure_widget();
