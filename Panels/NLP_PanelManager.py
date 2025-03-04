@@ -22,10 +22,8 @@ class NLP_SidePanelManager():
 		self.delegate_DailyNoteRoutine = delegate_DailyNoteRoutine
 		self.entityTracker:EntityManager = self.PluginPrivateData.entTracker
 		self.panels:List[PanelTab] = []
-		print(f'{DEBUG_PREFIX} SidePanelManager __init__')
 
 	def addTab(self, internal_name:str, display_name:str, icon_name:str):
-		print(f'{DEBUG_PREFIX} SidePanelManager addTab')
 		panel_tab = PanelTab(
 			internal_name=internal_name,
 			display_name=display_name,
@@ -49,8 +47,7 @@ class NLP_SidePanelManager():
 		for panel in self.panels:
 			print(f'{DEBUG_PREFIX} removing panel {panel.internal_name}')
 			self.side_panel.remove_item(panel.GetWidget())
-			panel.treeView.get_model().clear() # Is this necessary? Or will it be destroyed when we clear the widget.
-			panel.widget_container = None # TODO move this code into panel.deactivate() method
+			panel.do_deactivate()
 		self.panels.clear()
 		self.side_panel = None
 
