@@ -54,13 +54,13 @@ class NLP_SidePanelManager():
 	def handle_note_focus_request(self, note:ENote):
 		print(f'{DEBUG_PREFIX} handle_note_focus_request')
 		panel = None
-		found_note:Gtk.TreePath = None
+		note_path:Gtk.TreePath = None
 		for panel in self.panels:
-			found_note = panel.GetNote(note)
-			if (found_note is not None):
+			note_path = panel.GetNote(note)
+			if (note_path is not None):
 				break
-		if (found_note is None):
+		if (note_path is None):
 			print(f'{DEBUG_PREFIX} handle_note_focus_request no notes found')
 			return
 		self.side_panel.activate_item(panel) # switches to the tab
-		panel.FocusNote(found_note)
+		panel.FocusNote(note_path)
