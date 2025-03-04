@@ -1,7 +1,12 @@
-from JD_EntManager import JD_EntLibrary, JD_EntNote, EntityManager
+import gi
+from gi.repository import GObject
+
+from JD_EntManager import EntityManager
+from JD__entities import JD_EntLibrary, JD_EntNote
 from JD__main_config import JDPluginConfig
 from datetime import datetime
 from JD_dailynotes import DEBUG_PREFIX
+
 class JDPluginPrivate():
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls,'_self'):
@@ -22,8 +27,6 @@ class JDPluginPrivate():
 		self.pluginConfig.connect('library-path-removed',self.entTracker.RemoveLibraryPath)
 
 	def __del__(self):
-		self.panel_manager.deactivate()
-		self.panel_manager = None
 		self.entTracker.deactivate()
 		self.entTracker = None
 
@@ -40,12 +43,16 @@ class JDPluginPrivate():
 		if lib is None: return None
 		date:datetime = datetime.now()
 		date_str:str = date.strftime(r'%Y-%m-%d')
+		found_note:JD_EntNote|None = None
 		for note in lib.GetNotes():
 			filename = note.get_filename()
 			print(f'{filename}')
 			if filename.startswith(date_str):
 				print(f'NOTE FOUND: {filename}')
-				return note
-		note = lib.GetCreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
+				found_note = note
+				break
+		if (found_note is None):
+			found_note = lib.GetCreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
+		
 		print(f'{DEBUG_PREFIX} CreateDailyNote date_str:{note.get_filename()}')
 		return note
