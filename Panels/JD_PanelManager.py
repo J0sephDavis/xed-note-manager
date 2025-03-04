@@ -8,7 +8,7 @@ from gi.repository import Xed
 from gi.repository import Gdk
 
 from JD_PluginPrivateData import JDPluginPrivate
-from JD_sidepanel import JDPanelTab
+from Panels.JD_sidepanel import JDPanelTab
 from JD_EntManager import EntityManager
 from JD__entities import JD_EntLibrary, JD_EntNote, JD_EntBase
 

@@ -10,7 +10,7 @@ from JD_yaml_dialog import JDPlugin_Dialog_1
 from JD__entities import JD_EntNote
 from JD__main_config import JDPluginConfig
 from JD_PluginPrivateData import JDPluginPrivate
-from JD_sidepanel import JDSidePanelManager
+from Panels.JD_PanelManager import JDSidePanelManager
 
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
