@@ -9,7 +9,7 @@ from gi.repository import Gdk
 
 from NLP_PrivateData import PrivateData
 from Panels.NLP_PanelTab import PanelTab
-from NLP_EntityManager import EntityManager
+from Entities.NLP_EntityManager import EntityManager
 from NLP_Entities import ELibrary, ENote, EBase
 
 from typing import List,Tuple
