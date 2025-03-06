@@ -17,20 +17,20 @@ menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
 		<menu name="ToolsMenu" action="Tools">
 			<placeholder name="ToolsOps_2">
-				<menuitem name="JDPlugin" action="JDPlugin_SpawnDialog_Action"/>
-				<menuitem name="JDPluginToolOp3" action="JDPlugin_SearchYaml_Action"/>
-				<menuitem name="Create Daily Note" action="JDPlugin_Create_DailyNote"/>
+				<menuitem name="NLPlugin" action="NLPlugin_SpawnDialog_Action"/>
+				<menuitem name="NLPluginToolOp3" action="NLPlugin_SearchYaml_Action"/>
+				<menuitem name="Create Daily Note" action="NLPlugin_Create_DailyNote"/>
 			</placeholder>
 		</menu>
 	</menubar>
 </ui>"""
 
 class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configurable): #maybe make into ViewActivatable? not like we care about the window
-	__gtype_name__ = "JDPlugin"
+	__gtype_name__ = "NLPlugin"
 	window = GObject.property(type=Xed.Window)
 	PluginPrivate = PrivateData()
 	def __init__(self):
-		print(f'{DEBUG_PREFIX} __init__ JDPlugin')
+		print(f'{DEBUG_PREFIX} __init__ NLPlugin')
 		self.search_str = 'name' # TOBE deprecated
 		GObject.Object.__init__(self)
 		self.pluginConfig = NLPConfig()
@@ -99,17 +99,17 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 	#install menu items
 	def _insert_menu(self):
 		manager = self.window.get_ui_manager()
-		self._action_group = Gtk.ActionGroup("JDPluginActions")
+		self._action_group = Gtk.ActionGroup("NLPluginActions")
 		self._action_group.add_actions(
 			[
-				("JDPlugin_SpawnDialog_Action",None, _("Set YAML substring match"), # type: ignore
+				("NLPlugin_SpawnDialog_Action",None, _("Set YAML substring match"), # type: ignore
 				None, _("choose the substring to look for when parsing notes"), # type: ignore
 				self.DO_spawn_dialog),
 				# --
-				("JDPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
+				("NLPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
 	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
 				# --
-				("JDPlugin_Create_DailyNote", None, _("Create Daily Note"), # type: ignore
+				("NLPlugin_Create_DailyNote", None, _("Create Daily Note"), # type: ignore
 	 			None, _("Creates (or opens) todays daily note"), self.DailyNoteRoutine), # type: ignore
 			])
 		manager.insert_action_group(self._action_group, -1)

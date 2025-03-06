@@ -22,7 +22,7 @@ class NLPConfig(GObject.Object):
 		print(f'{DEBUG_PREFIX} Config SIGNAL - library-path-removed | {library_path}')
 	
 	def __new__(self):
-		print(f'{DEBUG_PREFIX} JDPluginConfig __new__')
+		print(f'{DEBUG_PREFIX} NLPConfig __new__')
 		if not hasattr(self,'instance'):
 			print(f'{DEBUG_PREFIX} creating new instance')
 			self.instance = super().__new__(self)
@@ -31,9 +31,9 @@ class NLPConfig(GObject.Object):
 
 	def __init__(self):
 		super().__init__()
-		print(f'{DEBUG_PREFIX} JDPluginConfig.__init__')
+		print(f'{DEBUG_PREFIX} NLPConfig.__init__')
 		if (self.already_init):
-			print(f'{DEBUG_PREFIX} JDPluginConfig INIT TRAP')
+			print(f'{DEBUG_PREFIX} NLPConfig INIT TRAP')
 			return
 		self.already_init = True
 		user_home_dir = getenv('HOME')
@@ -41,7 +41,7 @@ class NLPConfig(GObject.Object):
 		if (user_config_dir is None):
 			user_config_dir = f'{user_home_dir}/.config/'
 
-		self.config_file_path:str = user_config_dir + 'xed_JDplugin.conf'
+		self.config_file_path:str = user_config_dir + 'xed_NLPlugin.conf'
 
 		self.library_added_callbacks = []
 		self.library_removed_callbacks = []
@@ -60,7 +60,7 @@ class NLPConfig(GObject.Object):
 		return None
 
 	def _loadConfig(self):
-		assert self.__yaml is None, "JDPluginConfig:_loadConfig self.__yaml is not None."
+		assert self.__yaml is None, "NLPConfig:_loadConfig self.__yaml is not None."
 
 		print(f'{DEBUG_PREFIX} Loading configuration file ({self.config_file_path})')
 		file:Gio.File = getFileFromPath(self.config_file_path)
@@ -114,7 +114,7 @@ class NLPConfig(GObject.Object):
 		outputStream.close()
 
 	def do_create_configure_widget(self): # PeasGtk.Configurable
-		print(f'{DEBUG_PREFIX} JDpluginConfig createConfigureWidget')
+		print(f'{DEBUG_PREFIX} NLPConfig createConfigureWidget')
 		widget = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
 		# -- Daily note text entry
 		text = None

@@ -45,7 +45,7 @@ class NLP_SidePanelManager():
 		return None
 
 	def deactivate(self):
-		print(f'{DEBUG_PREFIX} JDSidePanelManager.deactivate()')
+		print(f'{DEBUG_PREFIX} NLP_PanelManager.deactivate()')
 		for panel in self.panels:
 			print(f'{DEBUG_PREFIX} removing panel {panel.internal_name}')
 			self.side_panel.remove_item(panel.GetWidget())
