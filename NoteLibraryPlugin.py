@@ -6,7 +6,6 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import PeasGtk
-from NLP_yaml_dialog import JDPlugin_Dialog_1
 from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from NLP_PrivateData import PrivateData
@@ -17,8 +16,6 @@ menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
 		<menu name="ToolsMenu" action="Tools">
 			<placeholder name="ToolsOps_2">
-				<menuitem name="NLPlugin" action="NLPlugin_SpawnDialog_Action"/>
-				<menuitem name="NLPluginToolOp3" action="NLPlugin_SearchYaml_Action"/>
 				<menuitem name="Create Daily Note" action="NLPlugin_Create_DailyNote"/>
 			</placeholder>
 		</menu>
@@ -34,9 +31,6 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		self.search_str = 'name' # TOBE deprecated
 		GObject.Object.__init__(self)
 		self.pluginConfig = NLPConfig()
-
-	# def do_update_state(self):
-	# 	print(f'{DEBUG_PREFIX} window:{self.window}')
 
 	def __del__(self):
 		print(f'{DEBUG_PREFIX}----- __del__ ---')
@@ -102,13 +96,6 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		self._action_group = Gtk.ActionGroup("NLPluginActions")
 		self._action_group.add_actions(
 			[
-				("NLPlugin_SpawnDialog_Action",None, _("Set YAML substring match"), # type: ignore
-				None, _("choose the substring to look for when parsing notes"), # type: ignore
-				self.DO_spawn_dialog),
-				# --
-				("NLPlugin_SearchYaml_Action",None,_("Search YAML"), # type: ignore
-	 			None, _("Opens yaml files matching the set substring"), self.DO_SearchNotes), # type: ignore
-				# --
 				("NLPlugin_Create_DailyNote", None, _("Create Daily Note"), # type: ignore
 	 			None, _("Creates (or opens) todays daily note"), self.DailyNoteRoutine), # type: ignore
 			])
@@ -130,28 +117,3 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		self.panel_manager.handle_note_focus_request(note)
 		note.open_in_new_tab(self.window)
 		return note
-
-	def DO_spawn_dialog(self,action):
-		win = JDPlugin_Dialog_1(self.search_str, self.dialog_callback)
-		win.show();
-
-	def dialog_callback(self, text):
-		print(f'{DEBUG_PREFIX} dialog_callback received: {text}')
-		self.search_str = text;
-
-	def DO_SearchNotes(self,action):
-		search = self.search_str
-		for note in self.library.GetNotes():
-			print(f'{DEBUG_PREFIX} NOTE: {note.filename}')
-			if SearchNoteYaml(search, note):
-				note.open_in_new_tab(self.window)
-
-def SearchNoteYaml(search_str, note:ENote) -> bool:
-	print(f'{DEBUG_PREFIX} processing note: {note.filename}')
-	yaml = note.get_yaml()
-	if yaml is None:
-		print(f'{DEBUG_PREFIX} note contains NO yaml')
-		return False
-	yaml_str = yaml.__str__()
-	print(f'{DEBUG_PREFIX} note yaml: {yaml_str}')
-	return yaml_str.find(search_str) >= 0;

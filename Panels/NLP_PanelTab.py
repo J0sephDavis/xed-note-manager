@@ -73,19 +73,11 @@ class PanelTab(Gtk.Box):
 		# ------------------------ popup menu ------------------------
 		# TODO store handler IDs and remove on __del__
 		self.menu_is_open:bool = False
-		menu_RemoveSelected = Gtk.MenuItem.new_with_label("Remove selected Entry")
-		menu_RemoveSelected.connect('activate', self.handler_remove_selected)
-
 		menu_DeleteSelected = Gtk.MenuItem.new_with_label("Delete Selected Entry")
 		menu_DeleteSelected.connect('activate', self.handler_DeleteSelectedFile)
+		
 		menu_OpenExplorer = Gtk.MenuItem.new_with_label("Open in File Explorer")
 		menu_OpenExplorer.connect('activate', self.handler_OpenNoteInFileExplorer)
-
-		menu_CopyYAML = Gtk.MenuItem.new_with_label("Copy YAML to clipboard") # only show if the selected entity hasattr(yaml)
-		menu_CopyYAML.connect('activate', self.handler_CopyFrontmatter)
-
-		menu_CreateFromTemplate = Gtk.MenuItem.new_with_label("Create from Template") # include a submenu popout
-		menu_CreateFromTemplate.connect('activate', self.handler_unimplemented)
 
 		menu_CreateDailyNote = Gtk.MenuItem.new_with_label("Create Daily Note") # include a submenu popout
 		menu_CreateDailyNote.connect('activate', delegate_DailyNoteRoutine)
@@ -93,13 +85,8 @@ class PanelTab(Gtk.Box):
 		self.menu = Gtk.Menu()
 		# TODO, can we use action groups here? Then we can set sensitivity on some groups so they may not appear
 		# --- deal with the currently selected entry ---
-		self.menu.append(menu_RemoveSelected)
 		self.menu.append(menu_DeleteSelected)
 		self.menu.append(menu_OpenExplorer)
-		self.menu.append(menu_CopyYAML)
-		# --- deals with whichever library the selection is currently within ----
-		self.menu.append(Gtk.SeparatorMenuItem())
-		self.menu.append(menu_CreateFromTemplate)
 		# --- plugin based, no selection needed ---
 		self.menu.append(Gtk.SeparatorMenuItem())
 		self.menu.append(menu_CreateDailyNote)
@@ -134,13 +121,6 @@ class PanelTab(Gtk.Box):
 			return None
 		return found[0]
 
-	def handler_CopyFrontmatter(self,widget):
-		ent = self.GetCurrentlySelected()[1]()
-		if (type(ent) != ENote): return
-		frontmatter:str = ent.get_yaml_as_str()
-		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-		clipboard.set_text(frontmatter, -1)
-
 	def handler_DeleteSelectedFile(self,widget):
 		ent = self.GetCurrentlySelected()[1]()
 		if issubclass(type(ent),EBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
@@ -154,10 +134,6 @@ class PanelTab(Gtk.Box):
 	def handler_CreateDailyNote(self, widget):
 		print(f'{DEBUG_PREFIX} handler_CreateDailyNote')
 		note = self.plugin_private_data.CreateDailyNote()
-
-
-	def handler_unimplemented(self, arg):
-		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
 
 	def handler_button_release(self, view, event):
 		if (event.button != 3): return False # Propagate signal
@@ -187,19 +163,6 @@ class PanelTab(Gtk.Box):
 		elif (type(base) is ELibrary):
 			base.open_in_explorer()
 	
-	# DEBUG only. Remove in PROD
-	# removes the selected entity from the model (removes ALL of them)
-	def handler_remove_selected(self, widget):
-		entry_ent = self.GetCurrentlySelected()[1]()
-		if (entry_ent is None): return
-		if (type(entry_ent) is ELibrary):
-			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
-		elif (type(entry_ent) is ENote):
-			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
-		else:
-			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
-			return
-
 	def OnLibraryAdded(self,caller,library:ELibrary): # called by entity tracker
 		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
 		self.__add_library_signals(ref(library))
