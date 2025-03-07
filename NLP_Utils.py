@@ -2,8 +2,10 @@ from NoteLibraryPlugin import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
+gi.require_version('Gtk', '3.0')
 from gi.repository import GLib
 from gi.repository import Gio
+from gi.repository import Gtk
 from typing import List
 import yaml
 import subprocess
@@ -76,3 +78,11 @@ def getFileFromPath(file_path:str) -> Gio.File:
 
 def OpenPathInFileExplorer(path:str):
 	subprocess.call(["xdg-open",path])
+
+def menu_separator():
+	return [Gtk.SeparatorMenuItem()]
+
+def new_menu_item(label:str, on_activate_method):
+	item = Gtk.MenuItem.new_with_label(label)
+	item.connect('activate', on_activate_method)
+	return item
