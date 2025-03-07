@@ -2,13 +2,16 @@ from NLP_Utils import DEBUG_PREFIX
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
+gi.require_version('Gtk', '3.0')
 from gi.repository import GObject
 from gi.repository import Xed
 from gi.repository import Gtk
+from gi.repository import Gdk
 from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityManager import EntityManager
+from NLP_Utils import new_menu_item, menu_separator
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
 from typing import List,Tuple,Dict
@@ -32,7 +35,7 @@ class PanelTabBase(Gtk.Box):
 		self.plugin_private_Data = None
 		self.treeView.get_model().clear()
 	
-	def __init__(self, window:Xed.Window, treeModel:Gtk.TreeModel, internal_name:str, display_name:str, icon_name:str): #, menu_items:List[Gtk.MenuItem]):
+		# ---- Properties ----
 		self.window = window
 		self.internal_name = internal_name 	# This should be unique, or at least unique to an implement class of PanelTabBase. Used in algorithms
 		self.display_name = display_name	# For the user, it shows up in the UI menus
@@ -40,7 +43,7 @@ class PanelTabBase(Gtk.Box):
 		self.plugin_private_Data = PrivateData()
 		# Dictionary of a weakreferenced object which we have a signal attached to, and the list of signal ids to disconnect.
 		self.handles:Dict[ref[GObject.Object],List[int]] = {}
-		# Setup the main widget
+		# ----- TreeView -----
 		super().__init__(spacing=6,orientation=Gtk.Orientation.VERTICAL)
 		self.treeView = Gtk.TreeView(model=treeModel)
 
@@ -49,15 +52,9 @@ class PanelTabBase(Gtk.Box):
 		tree_handles.append(self.treeView.connect('row-activated', self.handler_row_activated))
 
 		self.pack_start(self.treeView,True,True,0)
-		self.show_all() # TODO make base class responsibility? Maybe its best to use builder methods to make our panels...
-		# Popup Menu
-		# TODO move responsbility to base class? Or builder method? Or leave as-is
-		# TODO Gio.MenuModel
+		# ----- Popup Menu -----
 		self.menu = Gtk.Menu()
-		# for item in menu_items:
-		# 	self.menu.append(item)
-		# self.menu.show_all()
-		
+	# <<< METHODS >>>
 	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
 		selection = self.treeView.get_selection()
 		if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
@@ -82,7 +79,7 @@ class PanelTabBase(Gtk.Box):
 		print(f'{DEBUG_PREFIX} EXCEPTION PanelTabBase.TryFocusNote NOT IMPLEMENTED')
 		return False
 
-	# <<< HANDLERS / CALLBACKS >>>
+	# <<< HANDLERS >>>
 	def handler_button_released(self, view, event):
 		if (event.button != 3): return False # Propagate signal
 		# If a right click is received, while the menu is closed,

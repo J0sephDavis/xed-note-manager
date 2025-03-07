@@ -9,6 +9,7 @@ from gi.repository import PeasGtk
 from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from NLP_PrivateData import PrivateData
+from NLP_Utils import new_menu_item
 from Panels.NLP_PanelManager import NLP_SidePanelManager
 from Panels.NLP_LibraryPanelTab import LibraryPanelTab
 from Panels.NLP_DailyNotePanel import DailyNotePanel

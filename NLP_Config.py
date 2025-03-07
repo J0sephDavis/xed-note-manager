@@ -94,9 +94,6 @@ class NLPConfig(GObject.Object):
 		old_DailyNotePath = self.GetDailyNotesPath()
 		print(f'{DEBUG_PREFIX} old:{old_DailyNotePath} new:{new_DailyNotePath}')
 
-		# ? If the currently stored path is different from the newly stored path
-		#	- announce updated value
-		# - Store whatever was received in YAML
 		if (old_DailyNotePath != new_DailyNotePath):
 			self.signal_daily_notes_path_updated.emit(new_DailyNotePath)
 		self.__yaml['daily_notes_path'] = new_DailyNotePath

@@ -43,7 +43,7 @@ class LibraryPanelTab(PanelTabBase):
 		)
 		treeStore.set_sort_column_id(0, Gtk.SortType.DESCENDING)
 
-		# ------------------------ entity tracker handles ------------------------
+		# ----- entity tracker handles -----
 		tracker_handles = self.handles[ref(ent_tracker)] = []
 		tracker_handles.append(ent_tracker.connect('library-added',self.OnLibraryAdded))
 		tracker_handles.append(ent_tracker.connect('library-removed', self.OnLibraryRemoved))
