@@ -17,7 +17,9 @@ from typing import List,Tuple
 from weakref import ref
 
 class DailyNotePanel(PanelTabBase):
-	def __init__(self, window:Xed.Window,display_name:str, internal_name:str, icon_name:str, library:ELibrary):
+	def __init__(self, window:Xed.Window,
+			display_name:str, internal_name:str, icon_name:str, library:ELibrary,
+			menu_items:List[Gtk.MenuItem]=[]):
 		self.library:ELibrary = library
 		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT)
 		super().__init__(
@@ -25,7 +27,8 @@ class DailyNotePanel(PanelTabBase):
 			treeModel=model,
 			internal_name=internal_name,
 			display_name=display_name,
-			icon_name=icon_name
+			icon_name=icon_name,
+			menu_items=menu_items,
 		)
 		viewColumn = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0)
 		self.treeView.insert_column(
@@ -37,9 +40,6 @@ class DailyNotePanel(PanelTabBase):
 		self.treeView.get_model().set_sort_column_id(0, Gtk.SortType.DESCENDING)
 		for note in library.GetNotes():
 			self.treeView.get_model().append([note.get_filename(), ref(note)])
-
-		self.menu_is_open:bool = False
-		self.menu.show_all()
 	# <<< Methods >>>
 	def TryFocusNote(self, note:ENote) -> bool:
 		# return true on success (note exists in this panel)

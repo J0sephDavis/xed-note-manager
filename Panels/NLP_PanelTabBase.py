@@ -35,6 +35,10 @@ class PanelTabBase(Gtk.Box):
 		self.plugin_private_Data = None
 		self.treeView.get_model().clear()
 	
+	def __init__(self,
+			  window:Xed.Window, treeModel:Gtk.TreeModel,
+			  internal_name:str, display_name:str, icon_name:str,
+			  menu_items:List[Gtk.MenuItem]): # menu_items is appended to the menu
 		# ---- Properties ----
 		self.window = window
 		self.internal_name = internal_name 	# This should be unique, or at least unique to an implement class of PanelTabBase. Used in algorithms
@@ -52,8 +56,36 @@ class PanelTabBase(Gtk.Box):
 		tree_handles.append(self.treeView.connect('row-activated', self.handler_row_activated))
 
 		self.pack_start(self.treeView,True,True,0)
+		self.show_all()
 		# ----- Popup Menu -----
+		self.menu_is_open:bool = False
 		self.menu = Gtk.Menu()
+
+		existing_note_handlers:List[Gtk.MenuItem] = [
+			new_menu_item("Open in File Explorer", self.handler_OpenNoteInFileExplorer),
+			new_menu_item("Delete selected entry", self.handler_DeleteSelectedFile),
+			new_menu_item("Copy YAML to Clipboard", self.handler_CopyFrontmatter),
+		]
+		meta_note_handlers:List[Gtk.MenuItem] = [
+			new_menu_item("Create from Template", self.handler_unimplemented),
+		]
+		meta_note_handlers.extend(menu_items)
+		print(meta_note_handlers)
+		debug_menu_items:List[Gtk.MenuItem] = [
+			new_menu_item("Remove selected entry", self.handler_remove_selected),
+		]
+
+		menu_item_holder:List[List[Gtk.MenuItem]] = [
+			existing_note_handlers,
+			menu_separator(),
+			meta_note_handlers,
+			menu_separator(),
+			debug_menu_items,
+		]
+		for items in menu_item_holder:
+			for item in items:
+				self.menu.append(item)
+		self.menu.show_all()
 	# <<< METHODS >>>
 	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
 		selection = self.treeView.get_selection()
@@ -105,3 +137,47 @@ class PanelTabBase(Gtk.Box):
 			base.open_in_new_tab(self.window)
 		elif (type(base) is ELibrary):
 			base.open_in_explorer()
+	
+	def handler_unimplemented(self, arg):
+		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
+
+	def handler_CopyFrontmatter(self,widget):
+		ent = self.GetCurrentlySelected()[1]()
+		if (type(ent) != ENote): return
+		frontmatter:str = ent.get_yaml_as_str()
+		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+		clipboard.set_text(frontmatter, -1)
+
+	def handler_DeleteSelectedFile(self,widget):
+		ent = self.GetCurrentlySelected()[1]()
+		ent_type = type(ent)
+		if issubclass(ent_type,EBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
+		if ent_type is ENote:
+			self.OnNoteRemoved(self,ent)
+		elif ent_type is ELibrary:
+			self.OnLibraryRemoved(self,ent)
+		ent.delete()
+
+	def handler_OpenNoteInFileExplorer(self, widget):
+		ent = self.GetCurrentlySelected()[1]()
+		if (issubclass(type(ent),EBase)):
+			ent.open_in_explorer()
+	
+	# DEBUG only. Remove in PROD
+	# removes the selected entity from the model (removes ALL of them)
+	def handler_remove_selected(self, widget):
+		entry_ent = self.GetCurrentlySelected()[1]()
+		if (entry_ent is None): return
+		if (type(entry_ent) is ELibrary):
+			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
+		elif (type(entry_ent) is ENote):
+			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
+		else:
+			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
+			return
+	# <<< EVENTS >>>
+	def OnNoteAdded(self, library:ELibrary, note:ENote): pass
+	def OnNoteRemoved(self, library:ELibrary, note:ENote): pass
+
+	def OnLibraryAdded(self, library:ELibrary, note:ENote): pass
+	def OnLibraryRemoved(self, library:ELibrary, note:ENote): pass

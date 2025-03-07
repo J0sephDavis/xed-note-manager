@@ -28,14 +28,15 @@ from weakref import ref
 
 class LibraryPanelTab(PanelTabBase):
 	def __init__(self, window:Xed.Window, internal_name:str, display_name:str, icon_name:str,
-				ent_tracker:EntityManager, delegate_DailyNoteRoutine):
+				ent_tracker:EntityManager, menu_items:List[Gtk.MenuItem]=[]):
 		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
 		super().__init__(
 			window=window,
 			treeModel=treeStore,
 			internal_name=internal_name,
 			display_name=display_name,
-			icon_name=icon_name
+			icon_name=icon_name,
+			menu_items=menu_items,
 		)
 		self.treeView.insert_column(
 			column=Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0),
@@ -48,27 +49,6 @@ class LibraryPanelTab(PanelTabBase):
 		tracker_handles.append(ent_tracker.connect('library-added',self.OnLibraryAdded))
 		tracker_handles.append(ent_tracker.connect('library-removed', self.OnLibraryRemoved))
 		
-		# ------------------------ popup menu ------------------------
-		# TODO store handler IDs and remove on __del__
-		self.menu_is_open:bool = False
-		menu_DeleteSelected = Gtk.MenuItem.new_with_label("Delete Selected Entry")
-		menu_DeleteSelected.connect('activate', self.handler_DeleteSelectedFile)
-		
-		menu_OpenExplorer = Gtk.MenuItem.new_with_label("Open in File Explorer")
-		menu_OpenExplorer.connect('activate', self.handler_OpenNoteInFileExplorer)
-
-		menu_CreateDailyNote = Gtk.MenuItem.new_with_label("Create Daily Note") # include a submenu popout
-		menu_CreateDailyNote.connect('activate', delegate_DailyNoteRoutine)
-
-		# TODO, can we use action groups here? Then we can set sensitivity on some groups so they may not appear
-		# --- deal with the currently selected entry ---
-		self.menu.append(menu_DeleteSelected)
-		self.menu.append(menu_OpenExplorer)
-		# --- plugin based, no selection needed ---
-		self.menu.append(Gtk.SeparatorMenuItem())
-		self.menu.append(menu_CreateDailyNote)
-		self.menu.show_all()
-	
 	def TryFocusNote(self, note:ENote) -> bool:
 		note_path:Gtk.TreePath = self._get_note(note)
 		if (note_path is None):
@@ -81,43 +61,6 @@ class LibraryPanelTab(PanelTabBase):
 		self.treeView.scroll_to_cell(note_path,None,False)
 		self.treeView.get_selection().select_path(note_path)
 		return True
-
-	def handler_CopyFrontmatter(self,widget):
-		ent = self.GetCurrentlySelected()[1]()
-		if (type(ent) != ENote): return
-		frontmatter:str = ent.get_yaml_as_str()
-		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-		clipboard.set_text(frontmatter, -1)
-
-	def handler_DeleteSelectedFile(self,widget):
-		ent = self.GetCurrentlySelected()[1]()
-		if issubclass(type(ent),EBase) == False: return # override the menu maker / somehow set a sensitivity for what will be shown and not shown (given the current selection)
-		ent.delete()
-
-	def handler_OpenNoteInFileExplorer(self, widget):
-		ent = self.GetCurrentlySelected()[1]()
-		if (issubclass(type(ent),EBase)):
-			ent.open_in_explorer()
-
-	def handler_CreateDailyNote(self, widget):
-		print(f'{DEBUG_PREFIX} handler_CreateDailyNote')
-		note = self.plugin_private_data.CreateDailyNote()
-
-	def handler_unimplemented(self, arg):
-		print(f'{DEBUG_PREFIX} unimplemented menu item {arg}')
-
-	# DEBUG only. Remove in PROD
-	# removes the selected entity from the model (removes ALL of them)
-	def handler_remove_selected(self, widget):
-		entry_ent = self.GetCurrentlySelected()[1]()
-		if (entry_ent is None): return
-		if (type(entry_ent) is ELibrary):
-			self.OnLibraryRemoved(self.handler_remove_selected, entry_ent)
-		elif (type(entry_ent) is ENote):
-			self.OnNoteRemoved(self.handler_remove_selected, entry_ent)
-		else:
-			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
-			return
 
 	def AddLibraries(self, libraries:List[ELibrary]):
 		for lib in libraries:

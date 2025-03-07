@@ -51,7 +51,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 			window=self.window,
 			internal_name='libraries', display_name='Libraries', icon_name='folder',
 			ent_tracker=self.PluginPrivate.entTracker,
-			delegate_DailyNoteRoutine=self.DailyNoteRoutine
+			menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)]
 		)
 		self.panel_manager.addTab(tab)
 		libraries = self.PluginPrivate.entTracker.GetLibraries()
@@ -64,8 +64,8 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 				# Create and delete this panel based on whether or not the config has a daily-notes folder?
 				# If none provided, or if its removed, delete the panel tab. When one is added construct a new one
 				internal_name='daily-notes', display_name='Daily Notes', icon_name='folder',
-				library = daily_notes_library
-				# delegate_DailyNoteRoutine=self.DailyNoteRoutine
+				library = daily_notes_library,
+				menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)],
 			)
 			self.panel_manager.addTab(daily_notes_panel)
 		
