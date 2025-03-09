@@ -72,7 +72,6 @@ def readYAML(file_path:str) -> object: # TODO perform YAML safe load here
 	return yaml.safe_load(yaml_buff)
 
 def getFileFromPath(file_path:str) -> Gio.File:
-	print(f'{DEBUG_PREFIX} get file from: {file_path}')
 	return Gio.File.new_for_path(file_path)
 
 def OpenPathInFileExplorer(path:str):

@@ -7,6 +7,7 @@ class EntityManager(GObject.Object): #
 # ------------------------------ life ------------------------
 	def __init__(self):
 		super().__init__()
+		self.daily_notes_library:ELibrary = None
 		self.libraries:List[ELibrary] = []
 
 		self.subscribers_library_removed = [] # try weak refs here. no sense in keeping an object in existence because it has a callback attached.
@@ -14,6 +15,7 @@ class EntityManager(GObject.Object): #
 
 	def deactivate(self):
 		print(f'{DEBUG_PREFIX} EntTracker Deactivate ----------------')
+		self.daily_notes_library:ELibrary = None
 		self.subscribers_library_removed.clear()
 		self.subscribers_library_added.clear()
 		self.libraries.clear()
@@ -25,17 +27,30 @@ class EntityManager(GObject.Object): #
 	@GObject.Signal(name='library-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_removed(self_entManager, library:ELibrary):
 		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed {library.path}')
+
+	@GObject.Signal(name='daily-notes-library-updated', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
+	def signal_daily_notes_library_updated(self_entManager, library:ELibrary|None):
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - daily-notes-library-updated {library.path}')
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
 	def AddLibraries(self, library_paths:List[str]):
-		# this is called during JDPlugin.on_activate()
-		# the config class exists prior to the entity tracker, thus the callbacks
-		# do not exist to handle the added libraries.
 		for path in library_paths:
 			self.AddLibraryPath(None, path)
+
+	def DailyNotesPathUpdated(self,caller,library_path:str|None): # connected in PrivateData.__init__
+		if (library_path is None or library_path.isspace()):
+			if (self.daily_notes_library is None): return
+			self.daily_notes_library = None
+		else:
+			if (self.daily_notes_library is not None\
+	   				and self.daily_notes_library.path == library_path):
+					return
+			# TODO try-except creation of library
+			self.daily_notes_library = ELibrary(library_path)
+		self.signal_daily_notes_library_updated.emit(self.daily_notes_library)
 # ------------------------------ callbacks -------------------------------------
 	def AddLibraryPath(self, caller, library_path:str):
-		print(f'{DEBUG_PREFIX} AddLibrary: {library_path}')
+		print(f'{DEBUG_PREFIX} AddLibraryPath: {library_path}')
 		try:
 			library = ELibrary(library_path)
 		except GLib.Error as e:
@@ -45,7 +60,7 @@ class EntityManager(GObject.Object): #
 		self.signal_library_added.emit(library)
 
 	def RemoveLibraryPath(self, caller, library_path:str):
-		print(f'{DEBUG_PREFIX} libraryRemovedCallback: {library_path}')
+		print(f'{DEBUG_PREFIX} RemoveLibraryPath: {library_path}')
 		removal:List[ELibrary] = [] #self.libraries.filter(lambda library: library.path == library_path)
 		for library in self.libraries:
 			if (library.path == library_path):

@@ -21,6 +21,10 @@ class NLPConfig(GObject.Object):
 	def signal_library_path_removed(self_config, library_path:str):
 		print(f'{DEBUG_PREFIX} Config SIGNAL - library-path-removed | {library_path}')
 	
+	@GObject.Signal(name='daily-notes-path-updated', flags=GObject.SignalFlags.RUN_LAST, arg_types=(str,))
+	def signal_daily_notes_path_updated(self_config, library_path:str):
+		print(f'{DEBUG_PREFIX} Config SIGNAL - daily-notes-path-updated | {library_path}')
+	
 	def __new__(self):
 		print(f'{DEBUG_PREFIX} NLPConfig __new__')
 		if not hasattr(self,'instance'):
@@ -47,7 +51,7 @@ class NLPConfig(GObject.Object):
 		self.library_removed_callbacks = []
 
 		self.__yaml:Dict = None
-		self._loadConfig()
+		self._loadConfig() #_loadConfig emits NO signals as it is expected to be called before anyone can listen.. which is dumb
 
 	def GetLibraries(self) -> List[str]:
 		if 'notes_directories' in self.__yaml:
@@ -86,22 +90,17 @@ class NLPConfig(GObject.Object):
 		for removed_library in filter(lambda old_lib: old_lib not in libraries, old_libraries):
 			self.signal_library_path_removed.emit(removed_library)
 		# --- Daily Note Text Entry
-		daily_notes_path = daily_note_text_entry.get_text()
-		old_daily_notes_path = self.GetDailyNotesPath()
-		print(f'{DEBUG_PREFIX} old:{old_daily_notes_path} new:{daily_notes_path}')
-		if (old_daily_notes_path is not None or old_daily_notes_path != ''):
-			#  There WAS an old path, and it is not equal to the new path
-			if (old_daily_notes_path != daily_notes_path):
-				self.signal_library_path_removed.emit(old_daily_notes_path)
-				if (daily_notes_path is not None and daily_notes_path != ''):
-					self.signal_library_path_added.emit(daily_notes_path)
-					print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {daily_notes_path}')
-					self.__yaml['daily_notes_path'] = daily_notes_path
-		elif (daily_notes_path is not None and daily_notes_path != ''): # creating a path when one previously did not exist
-			self.signal_library_path_added.emit(daily_notes_path)
-			self.__yaml['daily_notes_path'] = daily_notes_path
-		else:
-			self.__yaml['daily_notes_path'] = None
+		new_DailyNotePath = daily_note_text_entry.get_text()
+		old_DailyNotePath = self.GetDailyNotesPath()
+		print(f'{DEBUG_PREFIX} old:{old_DailyNotePath} new:{new_DailyNotePath}')
+
+		# ? If the currently stored path is different from the newly stored path
+		#	- announce updated value
+		# - Store whatever was received in YAML
+		if (old_DailyNotePath != new_DailyNotePath):
+			self.signal_daily_notes_path_updated.emit(new_DailyNotePath)
+		self.__yaml['daily_notes_path'] = new_DailyNotePath
+		
 		print(f'{DEBUG_PREFIX} saveConfig, daily notes directory: {self.GetDailyNotesPath()}')
 
 		# --- Write to File

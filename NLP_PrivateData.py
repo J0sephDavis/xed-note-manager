@@ -29,25 +29,18 @@ class PrivateData():
 			self.entTracker.AddLibraries(self.pluginConfig.GetLibraries())
 		daily_notes = self.pluginConfig.GetDailyNotesPath()
 		if (daily_notes is not None):
-			self.entTracker.AddLibraryPath(None, self.pluginConfig.GetDailyNotesPath())
+			self.entTracker.DailyNotesPathUpdated(None, self.pluginConfig.GetDailyNotesPath())
 
 		self.pluginConfig.connect('library-path-added',self.entTracker.AddLibraryPath)
 		self.pluginConfig.connect('library-path-removed',self.entTracker.RemoveLibraryPath)
+		self.pluginConfig.connect('daily-notes-path-updated', self.entTracker.DailyNotesPathUpdated)
 
 	def __del__(self):
 		self.entTracker.deactivate()
 		self.entTracker = None
-
-	def GetDailyNotesLibrary(self) -> ELibrary|None:
-		daily_notes_path = self.pluginConfig.GetDailyNotesPath()
-		libraries = self.entTracker.GetLibraries()
-		for library in libraries:
-			if library.path == daily_notes_path:
-				return library
-		return None
 	
 	def CreateDailyNote(self) -> ENote:
-		lib = self.GetDailyNotesLibrary()
+		lib = self.entTracker.daily_notes_library
 		if lib is None: return None
 		date:datetime = datetime.now()
 		date_str:str = date.strftime(r'%Y-%m-%d')

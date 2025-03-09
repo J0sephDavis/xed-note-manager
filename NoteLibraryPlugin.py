@@ -10,7 +10,9 @@ from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from NLP_PrivateData import PrivateData
 from Panels.NLP_PanelManager import NLP_SidePanelManager
-
+from Panels.NLP_LibraryPanelTab import LibraryPanelTab
+from Panels.NLP_DailyNotePanel import DailyNotePanel
+from Entities.NLP_EntityLibrary import ELibrary
 # look for xed-ui.xml in the xed proj
 menubar_ui_string = """<ui>
 	<menubar name="MenuBar">
@@ -41,13 +43,47 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		self.views_handles = {}
 		self._insert_menu()
 		# Side Panel
+		## main panel
 		self.panel_manager = NLP_SidePanelManager(self.window, self.DailyNoteRoutine)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
-		self.panel_manager.addTab(internal_name='main', display_name='Libraries', icon_name='folder')
-		# window signals (TODO disconnect)
+		tab = LibraryPanelTab(
+			window=self.window,
+			internal_name='libraries', display_name='Libraries', icon_name='folder',
+			ent_tracker=self.PluginPrivate.entTracker,
+			delegate_DailyNoteRoutine=self.DailyNoteRoutine
+		)
+		self.panel_manager.addTab(tab)
+		libraries = self.PluginPrivate.entTracker.GetLibraries()
+		if (len(libraries) > 0): tab.AddLibraries(libraries)
+		## daily notes panel
+		daily_notes_library = self.PluginPrivate.entTracker.daily_notes_library
+		if (daily_notes_library != None):
+			daily_notes_panel = DailyNotePanel(
+				window=self.window,
+				# Create and delete this panel based on whether or not the config has a daily-notes folder?
+				# If none provided, or if its removed, delete the panel tab. When one is added construct a new one
+				internal_name='daily-notes', display_name='Daily Notes', icon_name='folder',
+				library = daily_notes_library
+				# delegate_DailyNoteRoutine=self.DailyNoteRoutine
+			)
+			self.panel_manager.addTab(daily_notes_panel)
+		
+		# TODO disconnect signals
+		self.PluginPrivate.entTracker.connect('daily-notes-library-updated', self.update_daily_notes_panel)
 		self.window.connect('tab-added', self.tab_added)
 		self.window.connect('tab-removed', self.tab_removed)
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
+
+	def update_daily_notes_panel(self, caller, library:ELibrary|None):
+		print(f'{DEBUG_PREFIX} NLP update_daily_notes_panel {library}')
+		self.panel_manager.removeTab('daily-notes')
+		if (library is None): return
+		panel = DailyNotePanel(
+			window=self.window,
+			internal_name='daily-notes',display_name='Daily Notes', icon_name='folder',
+			library = library
+		)
+		self.panel_manager.addTab(panel)
 
 	def tab_added(self, window, tab):
 		self.views_handles[tab] = tab.get_view().connect("populate-popup", self.view_populate_popup)
@@ -112,8 +148,12 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 	# requests a daily note to be created
 	# request the panel current side pane with the note to be focussed
 	# opens the note in a new tab
-	def DailyNoteRoutine(self,*args) -> ENote:
+	def DailyNoteRoutine(self,*args) -> ENote|None:
 		note:ENote = self.PluginPrivate.CreateDailyNote()
-		self.panel_manager.handle_note_focus_request(note)
+		print(f'{DEBUG_PREFIX} DailyNoteRoutine.note {note}')
+		if (note is None):
+			print(f'{DEBUG_PREFIX} could not create daily note...')
+			return
+		self.panel_manager.handle_note_focus_request(note=note, daily_note=True)
 		note.open_in_new_tab(self.window)
 		return note

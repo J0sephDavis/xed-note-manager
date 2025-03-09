@@ -1,4 +1,5 @@
 from NLP_Utils import DEBUG_PREFIX
+from typing import List,Dict
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -7,14 +8,12 @@ from gi.repository import Gtk
 from gi.repository import Xed
 from gi.repository import Gdk
 
-from NLP_PrivateData import PrivateData
-from Panels.NLP_PanelTab import PanelTab
-from Entities.NLP_EntityManager import EntityManager
-from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
-from Entities.NLP_EntityBase import EBase
+from NLP_PrivateData import PrivateData
 
-from typing import List,Tuple
+from Panels.NLP_LibraryPanelTab import LibraryPanelTab
+from Panels.NLP_DailyNotePanel import DailyNotePanel
+from Panels.NLP_PanelTabBase import PanelTabBase
 
 class NLP_SidePanelManager():
 	def __init__(self, window:Xed.Window, delegate_DailyNoteRoutine):
@@ -22,27 +21,25 @@ class NLP_SidePanelManager():
 		self.side_panel = window.get_side_panel()
 		self.window = window
 		self.delegate_DailyNoteRoutine = delegate_DailyNoteRoutine
-		self.entityTracker:EntityManager = self.PluginPrivateData.entTracker
-		self.panels:List[PanelTab] = []
+		self.panels:List[PanelTabBase] = []
 
-	def addTab(self, internal_name:str, display_name:str, icon_name:str):
-		panel_tab = PanelTab(
-			internal_name=internal_name,
-			display_name=display_name,
-			icon_name=icon_name,
-			window=self.window,
-			ent_tracker=self.entityTracker,
-			delegate_DailyNoteRoutine=self.delegate_DailyNoteRoutine)
-		self.side_panel.add_item(panel_tab.GetWidget(),panel_tab.display_name,panel_tab.icon_name)
-		for library in self.entityTracker.GetLibraries():
-			panel_tab.OnLibraryAdded(None, library)
-		self.panels.append(panel_tab)
+	def addTab(self, tab:PanelTabBase):
+		self.side_panel.add_item(tab.GetWidget(),tab.display_name,tab.icon_name)
+		self.panels.append(tab)
+		self.side_panel.activate_item(tab)
 
-	def getTab(self, tab_internal_name:str) -> PanelTab|None:
+	def getTab(self, tab_internal_name:str) -> LibraryPanelTab|None:
 		for panel in self.panels:
 			if panel.internal_name == tab_internal_name:
 				return panel
 		return None
+
+	def removeTab(self,tab_internal_name:str):
+		panel = self.getTab(tab_internal_name)
+		if panel is not None:
+			self.panels.remove(panel)
+			self.side_panel.remove_item(panel)
+			panel.do_deactivate()
 
 	def deactivate(self):
 		print(f'{DEBUG_PREFIX} NLP_PanelManager.deactivate()')
@@ -53,16 +50,17 @@ class NLP_SidePanelManager():
 		self.panels.clear()
 		self.side_panel = None
 
-	def handle_note_focus_request(self, note:ENote):
+	def handle_note_focus_request(self, note:ENote, daily_note:bool=False):
 		print(f'{DEBUG_PREFIX} handle_note_focus_request')
-		panel = None
-		note_path:Gtk.TreePath = None
-		for panel in self.panels:
-			note_path = panel.GetNote(note)
-			if (note_path is not None):
-				break
-		if (note_path is None):
-			print(f'{DEBUG_PREFIX} handle_note_focus_request no notes found')
-			return
-		self.side_panel.activate_item(panel) # switches to the tab
-		panel.FocusNote(note_path)
+		if (daily_note):
+			panel:DailyNotePanel = self.getTab('daily-notes')
+			panel.TryFocusNote(note)
+			self.side_panel.activate_item(panel) # switches to the tab
+		else:
+			panel:PanelTabBase = None
+			note_path:Gtk.TreePath = None
+			for panel in self.panels:
+				if (panel.TryFocusNote(note)):
+					self.side_panel.activate_item(panel) # switches to the tab
+					return
+		print(f'{DEBUG_PREFIX} handle_note_focus_request no notes found')
