@@ -43,7 +43,7 @@ class DailyNotePanel(PanelTabBase):
 		viewColumn.set_sort_column_id(0) #,Gtk.SortType.DESCENDING
 		self.treeView.get_model().set_sort_column_id(0, Gtk.SortType.DESCENDING)
 		for note in library.GetNotes():
-			self.treeView.get_model().append([note.get_filename(), ref(note)])
+			self.treeView.get_model().append(note.create_model_entry())
 	# <<< Methods >>>
 	def TryFocusNote(self, note:ENote) -> bool:
 		# return true on success (note exists in this panel)
