@@ -3,4 +3,5 @@ build:
 	mkdir -p ~/.local/share/xed/plugins/NoteLibraryPlugin
 	cp -r /media/d_drive/VisualStudioCode\ Projects/custom-xed-plugin/* ~/.local/share/xed/plugins/NoteLibraryPlugin
 run: build
-	gdb --quiet /usr/bin/xed
+#	gdb --quiet /usr/bin/xed
+	gdb --quiet /media/d_drive/VisualStudioCode\ Projects/xed/build/xed/xed
