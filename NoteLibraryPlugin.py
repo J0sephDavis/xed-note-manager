@@ -63,7 +63,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 				window=self.window,
 				# Create and delete this panel based on whether or not the config has a daily-notes folder?
 				# If none provided, or if its removed, delete the panel tab. When one is added construct a new one
-				internal_name='daily-notes', display_name='Daily Notes', icon_name='folder',
+				internal_name='daily-notes', display_name='Daily Notes', icon_name='emblem-documents',
 				library = daily_notes_library,
 				menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)],
 			)

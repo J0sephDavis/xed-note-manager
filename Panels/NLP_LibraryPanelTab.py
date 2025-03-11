@@ -29,7 +29,7 @@ from weakref import ref
 class LibraryPanelTab(PanelTabBase):
 	def __init__(self, window:Xed.Window, internal_name:str, display_name:str, icon_name:str,
 				ent_tracker:EntityManager, menu_items:List[Gtk.MenuItem]=[]):
-		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
+		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT,str)
 		super().__init__(
 			window=window,
 			treeModel=treeStore,
@@ -39,8 +39,12 @@ class LibraryPanelTab(PanelTabBase):
 			menu_items=menu_items,
 		)
 		self.treeView.insert_column(
+			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),
+			position=0
+		)
+		self.treeView.insert_column(
 			column=Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0),
-			position=-1
+			position=1
 		)
 		treeStore.set_sort_column_id(0, Gtk.SortType.DESCENDING)
 

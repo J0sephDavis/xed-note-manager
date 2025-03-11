@@ -19,7 +19,7 @@ from typing import Dict,List,Tuple
 
 class ENote(EBase):
 	def __init__(self, file:Gio.File):
-		super().__init__(file=file)
+		super().__init__(file=file,icon='text-x-generic')
 		self.file_read:bool = False # True ONLY if readYAML has been called already.
 		self.__yaml = None
 

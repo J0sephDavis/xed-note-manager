@@ -11,13 +11,14 @@ class EBase(GObject.Object):
 	# ------------------------------ class -------------------------------------
 	def open_in_explorer(self): pass
 
-	def __init__(self, file:Gio.File):
+	def __init__(self, file:Gio.File, icon:str):
 		super().__init__()
-		self.file = file;
+		self.file = file
+		self.icon_str = icon
 	
 	def get_filename(self): return self.file.get_basename()
 	def get_path(self): return self.file.get_path()
-	
+	def get_icon(self): return self.icon_str # return the icon which the entity wants to be displayed with
 	def exists(self):
 		return self.file.query_exists()
 	

@@ -33,7 +33,7 @@ class ELibrary(EBase):
 		self.path = library_path
 		print(f'{DEBUG_PREFIX} library_path: {self.path}')
 		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
-		super().__init__(file=library)
+		super().__init__(file=library, icon='folder')
 		self.notes:List[ENote] = []
 		self._get_notes(library)
 

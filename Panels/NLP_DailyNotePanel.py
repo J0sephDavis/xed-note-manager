@@ -21,7 +21,7 @@ class DailyNotePanel(PanelTabBase):
 			display_name:str, internal_name:str, icon_name:str, library:ELibrary,
 			menu_items:List[Gtk.MenuItem]=[]):
 		self.library:ELibrary = library
-		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT)
+		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT, str)
 		super().__init__(
 			window=window,
 			treeModel=model,
@@ -32,8 +32,12 @@ class DailyNotePanel(PanelTabBase):
 		)
 		viewColumn = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0)
 		self.treeView.insert_column(
+			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),
+			position=0
+		)
+		self.treeView.insert_column(
 			column=viewColumn,
-			position=-1
+			position=1
 		)
 		# TODO why does this not accept the sort type? See PanelTab for how its done. it uses the tree view?
 		viewColumn.set_sort_column_id(0) #,Gtk.SortType.DESCENDING
