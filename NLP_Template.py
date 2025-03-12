@@ -4,9 +4,7 @@ from string import Template
 from collections import ChainMap
 from typing import Callable
 
-def prepare_template_pattern(cls:Template):
-	# sourced from cpython/Lib/string.py::Template:__init_subclass__
-	# added fields
+def prepare_template_pattern(cls:Template): # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L69
 	delim = re.escape(cls.delimiter)
 	id = cls.idpattern
 	bid = cls.braceidpattern or cls.idpattern
@@ -15,12 +13,10 @@ def prepare_template_pattern(cls:Template):
 		(?P<escaped>{delim})  |   # Escape sequence of two delimiters
 		(?P<named_with_arg>{id})\((?P<argument>{id})\)       |   # delimiter and a Python identifier and an argument
 		(?P<named>{id})       |   # delimiter and a Python identifier
-		{{(?P<braced>{bid})}} |   # delimiter and a braced identifier
+		{{(?P<braced>{bid})}} |   # delimiter and a braced identifier # I would remove this, but it would break the other class methods. It would be better to make a new class without inheritance...
 		(?P<invalid>)             # Other ill-formed delimiter exprs
 	)
 	"""
-	print(f'PRODtest_pattern:{pattern}')
-	# cls.pattern = pattern
 	return pattern
 
 _sentinel_dict={}
@@ -56,10 +52,11 @@ class NLP_Template(Template):
 	
 	# given the mapping, return a delegate to handle the conversion.
 	def __convert_delegate(self,mapping:ChainMap)-> Callable[[re.Match],str]:
-		def convert(mo:re.Match)->str:
-			# print(self.pattern)
-			# print(f'mo:{mo}')
+		def convert(mo:re.Match)->str: # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L110
 			named = self.__get_named(mo)
+			# TODO: Two types of named groups.
+			# named(argument:str) which takes arguments from the match object
+			# named[argument:str, mapping] which takes args from the match object, but also the entire mapping:ChainMap and does its own dirty work with that.
 			argument = mo.group('argument')
 			if named is not None:
 				print('named:\t' + named)
@@ -79,7 +76,7 @@ class NLP_Template(Template):
 							 self.pattern)
 		return convert
 
-	def custom_safe_substitute(self, mapping=_sentinel_dict, /, **kws):
+	def custom_safe_substitute(self, mapping=_sentinel_dict, /, **kws): # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L104
 		if mapping is _sentinel_dict:
 			mapping = kws
 		elif kws:
@@ -87,18 +84,15 @@ class NLP_Template(Template):
 	
 		return self.pattern.sub(self.__convert_delegate(mapping), self.template)
 	
-	def get_identifiers(self):
+	def get_identifiers(self): #modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L157
 		ids = []
 		for mo in self.pattern.finditer(self.template):
 			named = self.__get_named(mo)
 			if named is not None and named not in ids:
-				# add a named group only the first time it appears
 				ids.append(named)
 			elif (named is None
 				and mo.group('invalid') is None
 				and mo.group('escaped') is None):
-				# If all the groups are None, there must be
-				# another group we're not expecting
 				raise ValueError('Unrecognized named group in pattern',
 					self.pattern)
 		return ids
