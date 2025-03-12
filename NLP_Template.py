@@ -30,26 +30,6 @@ class NLP_Template(Template):
 		# so to keep my changes minimal and clear, this is the  solution
 		self.__get_named = lambda mo:mo.group('named') or mo.group('braced') or mo.group('named_with_arg')
 
-	def __convert(self,mapping:ChainMap,mo:re.Match)->str:
-		named = self.__get_named(mo)
-		argument = mo.group('argument')
-		if named is not None:
-			print('named:\t' + named)
-			try:
-				if argument is not None: # OR if mapping[named] is not str? then we could perform no arg executes as well
-					return str(mapping[named](argument))
-				else:
-					return str(mapping[named])
-			except (KeyError, TypeError) as e:
-				# consider attempting mapping[named] on Type Error.. would make this very. 'safe'
-				return mo.group()
-		if mo.group('escaped') is not None:
-			return self.delimiter
-		if mo.group('invalid') is not None:
-			return mo.group()
-		raise ValueError('Unrecognized named group in pattern',
-							self.pattern)
-	
 	# given the mapping, return a delegate to handle the conversion.
 	def __convert_delegate(self,mapping:ChainMap)-> Callable[[re.Match],str]:
 		def convert(mo:re.Match)->str: # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L110
