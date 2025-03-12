@@ -39,14 +39,15 @@ class NLP_Template(Template):
 			# named[argument:str, mapping] which takes args from the match object, but also the entire mapping:ChainMap and does its own dirty work with that.
 			argument = mo.group('argument')
 			if named is not None:
-				print('named:\t' + named)
 				try:
-					if argument is not None: # OR if mapping[named] is not str? then we could perform no arg executes as well
-						return str(mapping[named](argument))
-					else:
-						return str(mapping[named])
-				except (KeyError, TypeError) as e:
-					# consider attempting mapping[named] on Type Error.. would make this very. 'safe'
+					val = mapping[named]
+					if callable(val):
+						if argument is None:
+							return str(val())
+						else:
+							return str(val(argument))
+					return str(val)
+				except (KeyError, TypeError):
 					return mo.group()
 			if mo.group('escaped') is not None:
 				return self.delimiter
