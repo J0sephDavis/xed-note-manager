@@ -11,7 +11,11 @@ def prepare_template_pattern(cls:Template): # modified from: https://github.com/
 	pattern = fr"""
 	{delim}(?:
 		(?P<escaped>{delim})  |   # Escape sequence of two delimiters
-		(?P<named_with_arg>{id})\((?P<argument>{id})\)       |   # delimiter and a Python identifier and an argument
+		(?P<named_with_arg>{id})
+			(?:
+				\((?P<argument>{id})\)           |
+				\{{(?P<argument_with_map>{id})}}
+			)				  |
 		(?P<named>{id})       |   # delimiter and a Python identifier
 		{{(?P<braced>{bid})}} |   # delimiter and a braced identifier # I would remove this, but it would break the other class methods. It would be better to make a new class without inheritance...
 		(?P<invalid>)             # Other ill-formed delimiter exprs
@@ -38,23 +42,23 @@ class NLP_Template(Template):
 			# named(argument:str) which takes arguments from the match object
 			# named[argument:str, mapping] which takes args from the match object, but also the entire mapping:ChainMap and does its own dirty work with that.
 			argument = mo.group('argument')
+			argument_calls_for_map = mo.group('argument_with_map')
 			if named is not None:
 				try:
 					val = mapping[named]
 					if callable(val):
-						if argument is None:
-							return str(val())
-						else:
+						if argument is not None:
 							return str(val(argument))
+						if argument_calls_for_map is not None:
+							return str(val(argument_calls_for_map,mapping))
+						return str(val())
 					return str(val)
-				except (KeyError, TypeError):
-					return mo.group()
+				except (KeyError,TypeError): return mo.group()
 			if mo.group('escaped') is not None:
 				return self.delimiter
 			if mo.group('invalid') is not None:
 				return mo.group()
-			raise ValueError('Unrecognized named group in pattern',
-							 self.pattern)
+			raise ValueError('Unrecognized named group in pattern',self.pattern)
 		return convert
 
 	def custom_safe_substitute(self, mapping=_sentinel_dict, /, **kws): # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L104
