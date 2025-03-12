@@ -65,7 +65,7 @@ class ELibrary(EBase):
 		for note in notes:
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				self.__add_note(ENote.from_GFileInfo(self.path, note))
+				self.__add_note(ENote(notes.get_child(note)))
 	
 	def GetCreateNote(self, filename:str) -> ENote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
