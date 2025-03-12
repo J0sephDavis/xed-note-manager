@@ -1,0 +1,118 @@
+import re
+from datetime import datetime
+from string import Template
+from collections import ChainMap
+from typing import Callable
+
+def prepare_template_pattern(cls:Template):
+	# sourced from cpython/Lib/string.py::Template:__init_subclass__
+	# added fields
+	delim = re.escape(cls.delimiter)
+	id = cls.idpattern
+	bid = cls.braceidpattern or cls.idpattern
+	pattern = fr"""
+	{delim}(?:
+		(?P<escaped>{delim})  |   # Escape sequence of two delimiters
+		(?P<named_with_arg>{id})\((?P<argument>{id})\)       |   # delimiter and a Python identifier and an argument
+		(?P<named>{id})       |   # delimiter and a Python identifier
+		{{(?P<braced>{bid})}} |   # delimiter and a braced identifier
+		(?P<invalid>)             # Other ill-formed delimiter exprs
+	)
+	"""
+	print(f'PRODtest_pattern:{pattern}')
+	# cls.pattern = pattern
+	return pattern
+
+_sentinel_dict={}
+class NLP_Template(Template):
+	pattern = prepare_template_pattern(Template) # in Template.__init_subclass__ it will compile this string.
+	# unfortunately Template isn't quite accessible for modifying the pattern and converter
+	# you have to reimplement the only functions you'd ever call instead of simply passing a new method (convert() is locally scoped...)
+	def __init__(self, template):
+		super().__init__(template)
+		# because named = (mo.group(named) or mo.group(...)) is used several times in the source. I don't quite want to copy-paste the whole class
+		# so to keep my changes minimal and clear, this is the  solution
+		self.__get_named = lambda mo:mo.group('named') or mo.group('braced') or mo.group('named_with_arg')
+
+	def __convert(self,mapping:ChainMap,mo:re.Match)->str:
+		named = self.__get_named(mo)
+		argument = mo.group('argument')
+		if named is not None:
+			print('named:\t' + named)
+			try:
+				if argument is not None: # OR if mapping[named] is not str? then we could perform no arg executes as well
+					return str(mapping[named](argument))
+				else:
+					return str(mapping[named])
+			except (KeyError, TypeError) as e:
+				# consider attempting mapping[named] on Type Error.. would make this very. 'safe'
+				return mo.group()
+		if mo.group('escaped') is not None:
+			return self.delimiter
+		if mo.group('invalid') is not None:
+			return mo.group()
+		raise ValueError('Unrecognized named group in pattern',
+							self.pattern)
+	
+	# given the mapping, return a delegate to handle the conversion.
+	def __convert_delegate(self,mapping:ChainMap)-> Callable[[re.Match],str]:
+		def convert(mo:re.Match)->str:
+			# print(self.pattern)
+			# print(f'mo:{mo}')
+			named = self.__get_named(mo)
+			argument = mo.group('argument')
+			if named is not None:
+				print('named:\t' + named)
+				try:
+					if argument is not None: # OR if mapping[named] is not str? then we could perform no arg executes as well
+						return str(mapping[named](argument))
+					else:
+						return str(mapping[named])
+				except (KeyError, TypeError) as e:
+					# consider attempting mapping[named] on Type Error.. would make this very. 'safe'
+					return mo.group()
+			if mo.group('escaped') is not None:
+				return self.delimiter
+			if mo.group('invalid') is not None:
+				return mo.group()
+			raise ValueError('Unrecognized named group in pattern',
+							 self.pattern)
+		return convert
+
+	def custom_safe_substitute(self, mapping=_sentinel_dict, /, **kws):
+		if mapping is _sentinel_dict:
+			mapping = kws
+		elif kws:
+			mapping = ChainMap(kws, mapping)
+	
+		return self.pattern.sub(self.__convert_delegate(mapping), self.template)
+	
+	def get_identifiers(self):
+		ids = []
+		for mo in self.pattern.finditer(self.template):
+			named = self.__get_named(mo)
+			if named is not None and named not in ids:
+				# add a named group only the first time it appears
+				ids.append(named)
+			elif (named is None
+				and mo.group('invalid') is None
+				and mo.group('escaped') is None):
+				# If all the groups are None, there must be
+				# another group we're not expecting
+				raise ValueError('Unrecognized named group in pattern',
+					self.pattern)
+		return ids
+
+foo = NLP_Template(r'$baz is $$baz $baz(test) ${foo} ${bar} $func(test)')
+
+available_substitutions = {
+	'time_now':datetime.now().__str__(),
+	# todays date
+	# date time from string
+	# filename (pass)
+	# file path
+	# library meta data
+	'func':lambda x:f'>>{x}<<'
+}
+
+print(foo.custom_safe_substitute(available_substitutions))
