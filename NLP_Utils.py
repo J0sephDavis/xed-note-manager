@@ -36,6 +36,7 @@ def GetFileContents(file:Gio.File)->Tuple[bytes,str]|None: #contents, encoding
 		enc_inf = chardet.detect(contents[:256])
 	else:
 		enc_inf = chardet.detect(contents)
+	print(f'{DEBUG_PREFIX} getFileContents encoding={enc_inf.get('encoding')}')
 	return contents, enc_inf.get('encoding','Unknown')
 
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:

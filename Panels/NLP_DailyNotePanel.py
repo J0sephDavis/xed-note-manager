@@ -20,8 +20,9 @@ class DailyNotePanel(PanelTabBase):
 	def __init__(self, window:Xed.Window,
 			display_name:str, internal_name:str, icon_name:str, library:ELibrary,
 			menu_items:List[Gtk.MenuItem]=[]):
-		self.library:ELibrary = library
+		# ---- list store of treeview
 		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT, str)
+		# ---- init (MUST COME AFTER MODEL) 
 		super().__init__(
 			window=window,
 			treeModel=model,
@@ -30,6 +31,7 @@ class DailyNotePanel(PanelTabBase):
 			icon_name=icon_name,
 			menu_items=menu_items,
 		)
+		# ---- treeView (MUST COME AFTER super().__init__())
 		viewColumn = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0)
 		self.treeView.insert_column(
 			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),
@@ -42,6 +44,11 @@ class DailyNotePanel(PanelTabBase):
 		# TODO why does this not accept the sort type? See PanelTab for how its done. it uses the tree view?
 		viewColumn.set_sort_column_id(0) #,Gtk.SortType.DESCENDING
 		self.treeView.get_model().set_sort_column_id(0, Gtk.SortType.DESCENDING)
+		# --- library signals
+		self.library:ELibrary = library
+		lib_handles =  self.handles[ref(self.library)] = []
+		lib_handles.append(self.library.connect('note-added', self.OnNoteAdded))
+		lib_handles.append(self.library.connect('note-removed', self.OnNoteRemoved))
 		for note in library.GetNotes():
 			self.treeView.get_model().append(note.create_model_entry())
 	# <<< Methods >>>
