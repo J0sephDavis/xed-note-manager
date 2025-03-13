@@ -35,9 +35,10 @@ class PanelTabBase(Gtk.Box):
 		self.treeView.get_model().clear()
 	
 	def __init__(self,
-			  window:Xed.Window, treeModel:Gtk.TreeModel,
-			  internal_name:str, display_name:str, icon_name:str,
-			  menu_items:List[Gtk.MenuItem]): # menu_items is appended to the menu
+			  window:Xed.Window, treeModel:Gtk.TreeModel,			# gtk
+			  internal_name:str, display_name:str, icon_name:str,	# some properties TODO (because its a GObject, shouldn't we install them?)
+			  app_level_menu_items:List[Gtk.MenuItem], 				# menu_items is appended to the menu.
+			  panel_level_menu_items:List[Gtk.MenuItem]): 			# only made within PanelTabBase (sub)classes)
 		# ---- Properties ----
 		self.window = window
 		self.internal_name = internal_name 	# This should be unique, or at least unique to an implement class of PanelTabBase. Used in algorithms

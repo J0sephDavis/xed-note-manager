@@ -19,7 +19,7 @@ from weakref import ref
 class DailyNotePanel(PanelTabBase):
 	def __init__(self, window:Xed.Window,
 			display_name:str, internal_name:str, icon_name:str, library:ELibrary,
-			menu_items:List[Gtk.MenuItem]=[]):
+			app_level_menu_items:List[Gtk.MenuItem]=[]):
 		# ---- list store of treeview
 		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT, str)
 		# ---- init (MUST COME AFTER MODEL) 
@@ -29,7 +29,8 @@ class DailyNotePanel(PanelTabBase):
 			internal_name=internal_name,
 			display_name=display_name,
 			icon_name=icon_name,
-			menu_items=menu_items,
+			app_level_menu_items=app_level_menu_items,
+			panel_level_menu_items=[]
 		)
 		# ---- treeView (MUST COME AFTER super().__init__())
 		viewColumn = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0)

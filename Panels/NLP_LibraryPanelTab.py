@@ -21,7 +21,7 @@ from weakref import ref
 
 class LibraryPanelTab(PanelTabBase):
 	def __init__(self, window:Xed.Window, internal_name:str, display_name:str, icon_name:str,
-				ent_tracker:EntityManager, menu_items:List[Gtk.MenuItem]=[]):
+				ent_tracker:EntityManager, app_level_menu_items:List[Gtk.MenuItem]=[]):
 		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT,str)
 		super().__init__(
 			window=window,
@@ -29,7 +29,8 @@ class LibraryPanelTab(PanelTabBase):
 			internal_name=internal_name,
 			display_name=display_name,
 			icon_name=icon_name,
-			menu_items=menu_items,
+			app_level_menu_items=app_level_menu_items,
+			panel_level_menu_items=[]
 		)
 		self.treeView.insert_column(
 			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),

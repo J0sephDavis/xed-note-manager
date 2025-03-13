@@ -51,7 +51,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 			window=self.window,
 			internal_name='libraries', display_name='Libraries', icon_name='folder',
 			ent_tracker=self.PluginPrivate.entTracker,
-			menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)]
+			app_level_menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)]
 		)
 		self.panel_manager.addTab(library_panel)
 		libraries = self.PluginPrivate.entTracker.GetLibraries()
@@ -71,6 +71,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 			window=self.window,
 			internal_name='daily-notes',display_name='Daily Notes', icon_name='folder',
 			library = library,
+			app_level_menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)],
 		)
 		self.panel_manager.addTab(panel)
 
