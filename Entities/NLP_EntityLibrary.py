@@ -72,8 +72,8 @@ class ELibrary(EBase):
 				self.__add_note(ENote(gfile))
 	
 	# initial_content: If we create the file, this will be the content of the file.
-	def GetCreateNote(self, filename:str,initial_content:bytes=None) -> ENote:
-		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
+	def CreateNote(self, filename:str,initial_content:bytes=None) -> ENote:
+		print(f'{DEBUG_PREFIX} Library.CreateNote({filename})')
 		for note in self.notes: # Check the KNOWN notes or this file.
 			if note.get_filename() == filename:
 				return note

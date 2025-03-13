@@ -53,7 +53,7 @@ class PrivateData():
 				found_note = note
 				break
 		if (found_note is None):
-			found_note = lib.GetCreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
+			found_note = lib.CreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
 		
 		print(f'{DEBUG_PREFIX} CreateDailyNote date_str:{found_note.get_filename()}')
 		return found_note
