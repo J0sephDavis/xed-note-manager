@@ -71,18 +71,15 @@ class ELibrary(EBase):
 					self.templates.append(ENote(gfile))
 				self.__add_note(ENote(gfile))
 	
-	def GetCreateNote(self, filename:str) -> ENote:
+	# initial_content: If we create the file, this will be the content of the file.
+	def GetCreateNote(self, filename:str,initial_content:bytes=None) -> ENote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
-		for note in self.notes:
+		for note in self.notes: # Check the KNOWN notes or this file.
 			if note.get_filename() == filename:
-				print(f'{DEBUG_PREFIX} note already exists, returning {note}')
 				return note
-		# -- create note
-		# check if note with this path already exists, and get a ref..
-		# If a note with the path already exists, why would 
-		note = ENote(getFileFromPath(f'{self.path}/{filename}'))
+		note = ENote(getFileFromPath(f'{self.path}/{filename}')) # NOTE filesystem specific separator...
 		if (note.exists() == False):
-			template_data = b'this is a test template!'
-			note.create(template_data)
+			note.create(initial_content)
+		#---
 		self.__add_note(note)
 		return note;
