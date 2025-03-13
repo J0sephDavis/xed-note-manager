@@ -6,21 +6,21 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GLib
 from gi.repository import Gio
 from gi.repository import Gtk
-from typing import List
+from typing import List,Tuple
 import yaml
 import subprocess
+import chardet
 __read_buffer_length = 64
 
-
-def GetFileContents(file:Gio.File)->bytes|None:
-	istream = file.read()
-	contents:List[bytes] = []
-	data:bytes|None = __getLine(istream)
-	while (data is not None):
-		contents.append(data)
-		data = __getLine(istream)
-	istream.close()
-	return b''.join(contents)
+def GetFileContents(file:Gio.File)->Tuple[bytes,str]|None: #contents, encoding
+	is_load_successful,contents,etag_out = file.load_contents()
+	if (not is_load_successful):
+		return None
+	if (len(contents) > 256):
+		enc_inf = chardet.detect(contents[:256])
+	else:
+		enc_inf = chardet.detect(contents)
+	return contents, enc_inf.get('encoding','Unknown')
 
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:
 	byte_array:GLib.Bytes|None;
