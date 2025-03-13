@@ -83,3 +83,6 @@ class ELibrary(EBase):
 		#---
 		self.__add_note(note)
 		return note;
+
+	def GetTemplates(self) -> List[ENote]: # return as a list of ENotes, or maybe make a new entity to represent a template? or just use the Gio.File
+		return self.templates
