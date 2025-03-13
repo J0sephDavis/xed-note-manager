@@ -1,4 +1,4 @@
-from NLP_Utils import DEBUG_PREFIX
+from NLP_Utils import DEBUG_PREFIX,new_menu_item, menu_separator,GetFileContents
 import gi
 gi.require_version('Xed', '1.0')
 gi.require_version('PeasGtk', '1.0')
@@ -11,7 +11,6 @@ from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityManager import EntityManager
-from NLP_Utils import new_menu_item, menu_separator
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
 from typing import List,Tuple,Dict

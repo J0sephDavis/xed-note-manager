@@ -108,7 +108,7 @@ def OpenPathInFileExplorer(path:str):
 	subprocess.call(["xdg-open",path])
 
 def menu_separator():
-	return [Gtk.SeparatorMenuItem()]
+	return Gtk.SeparatorMenuItem()
 
 def new_menu_item(label:str, on_activate_method):
 	item = Gtk.MenuItem.new_with_label(label)
