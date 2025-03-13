@@ -65,7 +65,7 @@ class DailyNotePanel(PanelTabBase):
 	def OnNoteAdded(self,library:ELibrary, note:ENote):
 		print(f'{DEBUG_PREFIX} DailyNoteTab OnNoteAdded {library}\t{note}')
 		model = self.treeView.get_model()
-		model.append([note.get_filename(),ref(note)])
+		model.append(note.create_model_entry())
 	
 	def OnNoteRemoved(self,library:ELibrary, note:ENote):
 		print(f'{DEBUG_PREFIX} DailyNoteTab OnNoteRemoved library:{library}\tnote:{note}')
