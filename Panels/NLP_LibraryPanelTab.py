@@ -18,13 +18,6 @@ from weakref import ref
 # (later)
 # - right click menu to choose whether a file shoudl be opened in a new tab, deleted, moved, &c
 # - select multiple notes and open/delete/perform some other action on them
-# Aesthetic TODO
-# - folder and file icons like the filebrowser sidepanel
-# common interfaces for side panel tabs
-# - getName()
-# - getIcon()
-# - getWidget()
-# - getStore()
 
 class LibraryPanelTab(PanelTabBase):
 	def __init__(self, window:Xed.Window, internal_name:str, display_name:str, icon_name:str,
