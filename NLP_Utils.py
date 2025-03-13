@@ -12,6 +12,22 @@ import subprocess
 import chardet
 __read_buffer_length = 64
 
+# returns a GFile that does not exist
+# if default_file_name is 'note', then the files 
+def new_unique_file(directory:Gio.File, default_file_name:str) -> Gio.File:
+	num_file:int = 0
+	file_name:str = None
+	_file:Gio.File = directory.get_child(default_file_name)
+	while(_file.query_exists() == True):
+		if (num_file == 0):
+			file_name = default_file_name
+		else:
+			file_name = f'{default_file_name} {num_file}'
+		_file = directory.get_child(file_name)
+		num_file = num_file + 1
+	print(f'{DEBUG_PREFIX} new_unique_file: {_file.get_basename()}')
+	return _file
+
 def GetFileContents(file:Gio.File)->Tuple[bytes,str]|None: #contents, encoding
 	is_load_successful,contents,etag_out = file.load_contents()
 	if (not is_load_successful):
