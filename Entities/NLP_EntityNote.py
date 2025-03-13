@@ -40,5 +40,6 @@ class ENote(EBase):
 
 	def create(self, template_data):
 		outputStream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE)
-		outputStream.write_all(template_data)
+		if (template_data is not None):
+			outputStream.write_all(template_data)
 		outputStream.close()
