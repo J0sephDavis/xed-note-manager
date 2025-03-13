@@ -35,6 +35,7 @@ class ELibrary(EBase):
 		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
 		super().__init__(file=library, icon='folder')
 		self.notes:List[ENote] = []
+		self.templates:List[ENote] = []
 		self._get_notes(library)
 
 	def open_in_explorer(self):
@@ -65,7 +66,10 @@ class ELibrary(EBase):
 		for note in notes:
 			# TODO name filters (self.regex_filter & class.regex_filter)
 			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				self.__add_note(ENote(notes.get_child(note)))
+				gfile = notes.get_child(note)
+				if note.get_name().startswith('.template'):
+					self.templates.append(ENote(gfile))
+				self.__add_note(ENote(gfile))
 	
 	def GetCreateNote(self, filename:str) -> ENote:
 		print(f'{DEBUG_PREFIX} Library.GetCreateNote({filename})')
