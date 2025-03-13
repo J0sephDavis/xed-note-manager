@@ -3,8 +3,8 @@ from datetime import datetime
 from string import Template
 from collections import ChainMap
 from typing import Callable
-
-def prepare_template_pattern(cls:Template): # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L69
+ # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L69
+def prepare_template_pattern(cls:Template)->bytes:
 	delim = re.escape(cls.delimiter)
 	id = cls.idpattern
 	bid = cls.braceidpattern or cls.idpattern
@@ -21,7 +21,7 @@ def prepare_template_pattern(cls:Template): # modified from: https://github.com/
 		(?P<invalid>)             # Other ill-formed delimiter exprs
 	)
 	"""
-	return pattern
+	return pattern.encode('utf-8') # we are using BYTES in this house.
 
 _sentinel_dict={}
 class NLP_Template(Template):
@@ -35,8 +35,9 @@ class NLP_Template(Template):
 		self.__get_named = lambda mo:mo.group('named') or mo.group('braced') or mo.group('named_with_arg')
 
 	# given the mapping, return a delegate to handle the conversion.
-	def __convert_delegate(self,mapping:ChainMap)-> Callable[[re.Match],str]:
-		def convert(mo:re.Match)->str: # modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L110
+	def __convert_delegate(self,mapping:ChainMap)-> Callable[[re.Match],bytes]:
+		# modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L110
+		def convert(mo:re.Match)->bytes:
 			named = self.__get_named(mo)
 			# TODO: Two types of named groups.
 			# named(argument:str) which takes arguments from the match object
@@ -48,11 +49,11 @@ class NLP_Template(Template):
 					val = mapping[named]
 					if callable(val):
 						if argument is not None:
-							return str(val(argument))
+							return (val(argument))
 						if argument_calls_for_map is not None:
-							return str(val(argument_calls_for_map,mapping))
-						return str(val())
-					return str(val)
+							return (val(argument_calls_for_map,mapping))
+						return (val())
+					return (val)
 				except (KeyError,TypeError): return mo.group()
 			if mo.group('escaped') is not None:
 				return self.delimiter
@@ -66,7 +67,7 @@ class NLP_Template(Template):
 			mapping = kws
 		elif kws:
 			mapping = ChainMap(kws, mapping)
-	
+		
 		return self.pattern.sub(self.__convert_delegate(mapping), self.template)
 	
 	def get_identifiers(self): #modified from: https://github.com/python/cpython/blob/ebc24d54bcf554403e9bf4b590d5c1f49e648e0d/Lib/string.py#L157
