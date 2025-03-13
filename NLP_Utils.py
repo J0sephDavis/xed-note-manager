@@ -11,6 +11,17 @@ import yaml
 import subprocess
 __read_buffer_length = 64
 
+
+def GetFileContents(file:Gio.File)->bytes|None:
+	istream = file.read()
+	contents:List[bytes] = []
+	data:bytes|None = __getLine(istream)
+	while (data is not None):
+		contents.append(data)
+		data = __getLine(istream)
+	istream.close()
+	return b''.join(contents)
+
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:
 	byte_array:GLib.Bytes|None;
 	try:
