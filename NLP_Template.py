@@ -82,16 +82,27 @@ class NLP_Template(Template):
 					self.pattern)
 		return ids
 
-foo = NLP_Template(r'$baz is $$baz $baz(test) ${foo} ${bar} $func(test)')
+# available_substitutions = {
+# 	'time_now':datetime.now().__str__(),
+# 	# todays date
+# 	# date time from string
+# 	# filename (pass)
+# 	# file path
+# 	# library meta data
+# 	'project': lambda: 'gamma',
+# 	'bin': lambda: '01 foobar',
+# 	'category': lambda: '31 barfoo',
+# 	'func':lambda x:f'>>{x}<<',
+# 	'func2': lambda x,map: f'{x}'
+# }
 
-available_substitutions = {
-	'time_now':datetime.now().__str__(),
-	# todays date
-	# date time from string
-	# filename (pass)
-	# file path
-	# library meta data
-	'func':lambda x:f'>>{x}<<'
-}
-
-print(foo.custom_safe_substitute(available_substitutions))
+# template_str = r"""---
+# Project: "$project"
+# Category: "$category"
+# Bin: "$bin"
+# Creation: "$time_now"
+# aliases: $func2{test}
+# ---
+# """
+# foo = NLP_Template(template_str)
+# print(foo.custom_safe_substitute(available_substitutions))
