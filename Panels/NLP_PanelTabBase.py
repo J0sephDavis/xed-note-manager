@@ -50,9 +50,9 @@ class PanelTabBase(Gtk.Box):
 		super().__init__(spacing=6,orientation=Gtk.Orientation.VERTICAL)
 		self.treeView = Gtk.TreeView(model=treeModel)
 
-		tree_handles = self.handles[ref(self.treeView)] = []
-		tree_handles.append(self.treeView.connect('button-release-event', self.handler_button_released))
-		tree_handles.append(self.treeView.connect('row-activated', self.handler_row_activated))
+		treeView_handles = self.handles[ref(self.treeView)] = []
+		treeView_handles.append(self.treeView.connect('button-release-event', self.handler_button_released))
+		treeView_handles.append(self.treeView.connect('row-activated', self.handler_row_activated))
 
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
@@ -111,7 +111,7 @@ class PanelTabBase(Gtk.Box):
 		return False
 
 	# <<< HANDLERS >>>
-	def handler_button_released(self, view, event):
+	def handler_button_released(self, view:Gtk.TreeView, event):
 		if (event.button != 3): return False # Propagate signal
 		# If a right click is received, while the menu is closed,
 		# the element below the cursor will be selected (GOOD)

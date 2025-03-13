@@ -47,42 +47,30 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		## main panel
 		self.panel_manager = NLP_SidePanelManager(self.window, self.DailyNoteRoutine)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
-		tab = LibraryPanelTab(
+		library_panel = LibraryPanelTab(
 			window=self.window,
 			internal_name='libraries', display_name='Libraries', icon_name='folder',
 			ent_tracker=self.PluginPrivate.entTracker,
 			menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)]
 		)
-		self.panel_manager.addTab(tab)
+		self.panel_manager.addTab(library_panel)
 		libraries = self.PluginPrivate.entTracker.GetLibraries()
-		if (len(libraries) > 0): tab.AddLibraries(libraries)
-		## daily notes panel
-		daily_notes_library = self.PluginPrivate.entTracker.daily_notes_library
-		if (daily_notes_library != None):
-			daily_notes_panel = DailyNotePanel(
-				window=self.window,
-				# Create and delete this panel based on whether or not the config has a daily-notes folder?
-				# If none provided, or if its removed, delete the panel tab. When one is added construct a new one
-				internal_name='daily-notes', display_name='Daily Notes', icon_name='emblem-documents',
-				library = daily_notes_library,
-				menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)],
-			)
-			self.panel_manager.addTab(daily_notes_panel)
-		
+		if (len(libraries) > 0): library_panel.AddLibraries(libraries)
+		self.update_daily_notes_panel(self,self.PluginPrivate.entTracker.daily_notes_library)
 		# TODO disconnect signals
 		self.PluginPrivate.entTracker.connect('daily-notes-library-updated', self.update_daily_notes_panel)
 		self.window.connect('tab-added', self.tab_added)
 		self.window.connect('tab-removed', self.tab_removed)
 		print(f"{DEBUG_PREFIX} plugin created for {self.window}")
 
-	def update_daily_notes_panel(self, caller, library:ELibrary|None):
+	def update_daily_notes_panel(self, caller, library:ELibrary):
 		print(f'{DEBUG_PREFIX} NLP update_daily_notes_panel {library}')
-		self.panel_manager.removeTab('daily-notes')
+		self.panel_manager.removeTab('daily-notes') # SAFE, doesn't throw if it doesn't exist
 		if (library is None): return
 		panel = DailyNotePanel(
 			window=self.window,
 			internal_name='daily-notes',display_name='Daily Notes', icon_name='folder',
-			library = library
+			library = library,
 		)
 		self.panel_manager.addTab(panel)
 
