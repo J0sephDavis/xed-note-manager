@@ -1,7 +1,7 @@
 from NoteLibraryPlugin import DEBUG_PREFIX
 from gi.repository import GObject
 from gi.repository import Gio
-from NLP_Utils import getFileFromPath, OpenPathInFileExplorer
+from NLP_Utils import getFileFromPath, OpenPathInFileExplorer, new_unique_file
 from typing import List
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityNote import ENote
@@ -83,6 +83,15 @@ class ELibrary(EBase):
 		#---
 		self.__add_note(note)
 		return note;
+
+	def CreateUniqueNote(self, initial_content:bytes=None)->ENote:
+		file = new_unique_file(self.file, 'note')
+		if file is None: raise RuntimeError("(DESCRIPTIVE ERROR) oops")
+		note = ENote(file)
+		if (note.exists()): raise RuntimeError("File should have been unique; however, it already exists.")
+		note.create(initial_content)
+		self.__add_note(note)
+		return note
 
 	def GetTemplates(self) -> List[ENote]: # return as a list of ENotes, or maybe make a new entity to represent a template? or just use the Gio.File
 		return self.templates
