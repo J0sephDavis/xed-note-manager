@@ -17,8 +17,9 @@ from typing import List,Tuple
 from weakref import ref
 
 class DailyNotePanel(PanelTabBase):
+	name:str = 'daily-note-panel'
 	def __init__(self, window:Xed.Window,
-			display_name:str, internal_name:str, icon_name:str, library:ELibrary,
+			display_name:str, icon_name:str, library:ELibrary,
 			app_level_menu_items:List[Gtk.MenuItem]=[]):
 		# ---- list store of treeview
 		model:Gtk.ListStore = Gtk.ListStore(str, GObject.TYPE_PYOBJECT, str)
@@ -26,7 +27,7 @@ class DailyNotePanel(PanelTabBase):
 		super().__init__(
 			window=window,
 			treeModel=model,
-			internal_name=internal_name,
+			internal_name=DailyNotePanel.name,
 			display_name=display_name,
 			icon_name=icon_name,
 			app_level_menu_items=app_level_menu_items,

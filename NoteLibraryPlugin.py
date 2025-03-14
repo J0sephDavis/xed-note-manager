@@ -65,11 +65,11 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 
 	def update_daily_notes_panel(self, caller, library:ELibrary):
 		print(f'{DEBUG_PREFIX} NLP update_daily_notes_panel {library}')
-		self.panel_manager.removeTab('daily-notes') # SAFE, doesn't throw if it doesn't exist
+		self.panel_manager.removeTab(DailyNotePanel.name) # SAFE, doesn't throw if it doesn't exist
 		if (library is None): return
 		panel = DailyNotePanel(
 			window=self.window,
-			internal_name='daily-notes',display_name='Daily Notes', icon_name='folder',
+			display_name='Daily Notes', icon_name='folder',
 			library = library,
 			app_level_menu_items=[new_menu_item("Create Daily Note", self.DailyNoteRoutine)],
 		)
