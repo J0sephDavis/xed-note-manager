@@ -36,7 +36,7 @@ class ENote(EBase):
 		return tab
 	
 	def open_in_explorer(self):
-		OpenPathInFileExplorer(self.get_path().replace(self.get_filename(),''))
+		OpenPathInFileExplorer(self.get_path()[:-len(self.get_filename())])
 
 	def create(self, template_data):
 		outputStream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE)
