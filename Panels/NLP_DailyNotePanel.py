@@ -62,6 +62,10 @@ class DailyNotePanel(PanelTabBase):
 		self.treeView.get_selection().select_path(note_path)
 		return True
 
+	# override of base
+	def GetCurrentlySelectedLibrary(self)->ref[ELibrary]:
+		return ref(self.library)
+
 	# <<< SIGNAL CALLBACKS >>>
 	def OnNoteAdded(self,library:ELibrary, note:ENote):
 		print(f'{DEBUG_PREFIX} DailyNoteTab OnNoteAdded {library}\t{note}')

@@ -90,6 +90,27 @@ class PanelTabBase(Gtk.Box):
 		for item in all_menu_items: self.menu.append(item)
 		self.menu.show_all()
 	# <<< METHODS >>>
+	# # returns the library associated with the currently selected entry.
+	def GetCurrentlySelectedLibrary(self)->ref[ELibrary]|None:
+		print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary')
+		selection = self.treeView.get_selection()
+		if selection.get_mode() == Gtk.SelectionMode.MULTIPLE:
+			return None
+		(model,iter)=selection.get_selected()
+		if iter is None: return None
+		entry = model[iter][1]
+		if issubclass(type(entry()),ELibrary):
+			print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary, entry={entry}')
+			return entry
+		parent_iter = model.iter_parent(iter)
+		if parent_iter is None:
+			print('batman')
+			return None
+		entry = model[parent_iter][1]
+		if issubclass(type(entry()), ELibrary):
+			print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary, entry={entry}')
+			return entry
+	# returns the TreeIter to the currently highlight row + a weakref to entity
 	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
 		selection = self.treeView.get_selection()
 		if (selection.get_mode() == Gtk.SelectionMode.MULTIPLE):
