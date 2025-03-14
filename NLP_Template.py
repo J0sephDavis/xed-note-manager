@@ -28,7 +28,7 @@ class NLP_Template(Template):
 	pattern = prepare_template_pattern(Template) # in Template.__init_subclass__ it will compile this string.
 	# unfortunately Template isn't quite accessible for modifying the pattern and converter
 	# you have to reimplement the only functions you'd ever call instead of simply passing a new method (convert() is locally scoped...)
-	def __init__(self, template):
+	def __init__(self, template:bytes):
 		super().__init__(template)
 		# because named = (mo.group(named) or mo.group(...)) is used several times in the source. I don't quite want to copy-paste the whole class
 		# so to keep my changes minimal and clear, this is the  solution
