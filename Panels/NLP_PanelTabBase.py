@@ -184,9 +184,15 @@ class PanelTabBase(Gtk.Box):
 		ent.delete()
 
 	def handler_OpenNoteInFileExplorer(self, widget):
-		ent = self.GetCurrentlySelected()[1]()
-		if (issubclass(type(ent),EBase)):
-			ent.open_in_explorer()
+		ent = self.GetCurrentlySelected()[1]
+		if ent is not None:
+			ent = ent()
+			if (issubclass(type(ent),EBase)):
+				ent.open_in_explorer()
+				return
+		lib:ref[ELibrary]=self.GetCurrentlySelectedLibrary()
+		if lib is None: return
+		lib().open_in_explorer()
 	
 	# DEBUG only. Remove in PROD
 	# removes the selected entity from the model (removes ALL of them)
