@@ -10,7 +10,7 @@ from Entities.NLP_EntityNote import ENote
 from NLP_Config import NLPConfig
 from NLP_PrivateData import PrivateData
 from NLP_Utils import new_menu_item
-from Panels.NLP_PanelManager import NLP_SidePanelManager
+from Panels.NLP_PanelManager import SidePanelManager
 from Panels.NLP_LibraryPanelTab import LibraryPanelTab
 from Panels.NLP_DailyNotePanel import DailyNotePanel
 from Entities.NLP_EntityLibrary import ELibrary
@@ -45,7 +45,7 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 		self._insert_menu()
 		# Side Panel
 		## main panel
-		self.panel_manager = NLP_SidePanelManager(self.window, self.DailyNoteRoutine)
+		self.panel_manager = SidePanelManager(self.window, self.DailyNoteRoutine)
 		print(f'{DEBUG_PREFIX}\tpanel_manager: {self.panel_manager}')
 		library_panel = LibraryPanelTab(
 			window=self.window,

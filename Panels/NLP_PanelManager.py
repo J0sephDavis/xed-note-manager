@@ -15,7 +15,7 @@ from Panels.NLP_LibraryPanelTab import LibraryPanelTab
 from Panels.NLP_DailyNotePanel import DailyNotePanel
 from Panels.NLP_PanelTabBase import PanelTabBase
 
-class NLP_SidePanelManager():
+class SidePanelManager():
 	def __init__(self, window:Xed.Window, delegate_DailyNoteRoutine):
 		self.PluginPrivateData = PrivateData()
 		self.side_panel = window.get_side_panel()
