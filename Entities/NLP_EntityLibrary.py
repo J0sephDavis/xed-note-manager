@@ -2,20 +2,13 @@ from NoteLibraryPlugin import DEBUG_PREFIX
 from gi.repository import GObject
 from gi.repository import Gio
 from NLP_Utils import getFileFromPath, OpenPathInFileExplorer, new_unique_file
-from typing import List
+from typing import List,Callable,Tuple
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityNote import ENote
+from Entities.NLP_EntityTemplate import ETemplate
+from weakref import ref
 
 class ELibrary(EBase):
-
-	@GObject.Signal(name='note-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
-	def signal_note_added(self_library, note):
-		print(f'{DEBUG_PREFIX} Library SIGNAL - note-added')
-
-	@GObject.Signal(name='note-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
-	def signal_note_removed(self_library, note):
-		print(f'{DEBUG_PREFIX} Library SIGNAL - note-removed')
-	
 	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
 	# All attributes https://stuff.mit.edu/afs/sipb/project/barnowl/share/gtk-doc/html/gio/gio-GFileAttribute.html
 	# https://lazka.github.io/pgi-docs/Gio-2.0/flags.html#Gio.FileQueryInfoFlags # TODO configurable
@@ -28,72 +21,104 @@ class ELibrary(EBase):
 		r'access::can_read',
 	]);
 	
-	def __init__(self, library_path:str):
-		self.note_deleted_handlers = {}
-		self.path = library_path
-		print(f'{DEBUG_PREFIX} library_path: {self.path}')
-		library:Gio.File = getFileFromPath(self.path) # TODO try-except to get the dir
-		super().__init__(file=library, icon='folder')
-		self.notes:List[ENote] = []
-		self.templates:List[ENote] = []
-		self._get_notes(library)
-
-	def open_in_explorer(self):
-		OpenPathInFileExplorer(self.get_path())
-
-	def GetNotes(self):
-		# TODO accept a function that accepts a JD_EntNode and returns bool. Returns a list of notes compared by that function
-		return self.notes;
-
-	# adds a note to the main list and emits signal
-	def __add_note(self,note:ENote):
+	@classmethod
+	def from_path(cls,path:str): return cls(getFileFromPath(path))
+	# ----- signals -----
+	@GObject.Signal(name='note-added', flags=GObject.SignalFlags.RUN_FIRST, arg_types=(GObject.TYPE_PYOBJECT,))
+	def _signal_note_added(self,note:ENote): # RUN_FIRST
 		self.notes.append(note)
-		self.signal_note_added.emit(note)
-		self.note_deleted_handlers[note] = note.connect('file-deleted', self.__remove_note)
-
-	def __remove_note(self,note:ENote):
-		print(f'{DEBUG_PREFIX} remove note')
-		note.disconnect(self.note_deleted_handlers[note])
-		self.signal_note_removed.emit(note)
+		nref = ref(note)
+		if nref not in self.handlers:
+			self.handlers[ref(note)] = []
+		handles:List[int] = self.handlers[ref(note)]
+		handles.append(note.connect('file-deleted', self._signal_note_removed.emit))
+	@GObject.Signal(name='note-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
+	def _signal_note_removed(self,note:ENote): # RUN_FIRST
+		self.notes.append(note)
+		nref = ref(note)
+		if nref not in self.handlers:
+			return
+		handles:List[int] = self.handlers[ref(note)]
+		for id in handles:
+			note.disconnect(id)
 		self.notes.remove(note)
-
-	def _get_notes(self, library:Gio.File):
-		notes = library.enumerate_children(
+	# ----- virtual base class methods -----
+	def open_in_explorer(self): OpenPathInFileExplorer(self.get_path())
+	# ----- class-instance -----
+	def __init__(self, file:Gio.File): # Libraries are generally created from the config, which has paths
+		EBase.__init__(self,file,'folder')
+		self.notes:List[ENote] = []
+		self.templates:List[ETemplate] = []
+		self.__get_notes_from_dir(no_clobber=False, emit_signals=False)
+	
+	def __get_notes_from_dir(self, no_clobber:bool = True, emit_signals:bool = True):
+		add_note:Callable[[ENote],None] = self._signal_note_added.emit if emit_signals else self._signal_note_added
+		add_template = self.templates.append
+		# ---
+		directory_enumerator:Gio.FileEnumerator = self.file.enumerate_children(
 			self.search_attributes,
 			Gio.FileQueryInfoFlags.NONE,
 			None
 		)
-		for note in notes:
-			# TODO name filters (self.regex_filter & class.regex_filter)
-			if note.get_file_type() == Gio.FileType.REGULAR: # TODO reevaluate filter on FileType
-				gfile = notes.get_child(note)
-				if note.get_name().startswith('.template'):
-					self.templates.append(ENote(gfile))
-				else:
-					self.__add_note(ENote(gfile))
-	
-	# initial_content: If we create the file, this will be the content of the file.
-	def CreateNote(self, filename:str,initial_content:bytes=None) -> ENote:
-		print(f'{DEBUG_PREFIX} Library.CreateNote({filename})')
-		for note in self.notes: # Check the KNOWN notes or this file.
-			if note.get_filename() == filename:
-				return note
-		file:Gio.File = self.file.get_child(filename)
-		note = ENote(file)
-		if (note.exists() == False):
-			note.create(initial_content)
-		#---
-		self.__add_note(note)
-		return note;
-
-	def CreateUniqueNote(self, initial_content:bytes=None)->ENote:
-		file = new_unique_file(self.file, 'note')
-		if file is None: raise RuntimeError("(DESCRIPTIVE ERROR) oops")
-		note = ENote(file)
-		if (note.exists()): raise RuntimeError("File should have been unique; however, it already exists.")
-		note.create(initial_content)
-		self.__add_note(note)
+		# ---
+		file_info:Gio.FileInfo = None
+		ent:ETemplate|ENote = None
+		arr:List[ETemplate]|List[ENote] = None
+		for file_info in directory_enumerator:
+			if file_info.get_file_type() != Gio.FileType.REGULAR: continue
+			file:Gio.File = directory_enumerator.get_child(file_info)
+			if file_info.get_name().startswith('.template'):
+				ent = ETemplate(file)
+				arr = self.templates
+				append = add_template
+			else:
+				ent = ENote(file)
+				arr = self.notes
+				append = add_note
+			if no_clobber and ent in arr: continue
+			append(ent)
+	# Get Notes
+	def GetNotes(self)->List[ENote]: return self.notes
+	def GetNoteByName(self,name:str)->ENote|None:
+		note:ENote|None = None
+		for note in self.notes:
+			if note.get_filename() == name: break
 		return note
-
-	def GetTemplates(self) -> List[ENote]: # return as a list of ENotes, or maybe make a new entity to represent a template? or just use the Gio.File
-		return self.templates
+	def GetNoteByFile(self,file:Gio.File)->ENote|None:
+		note:ENote|None = None
+		for note in self.notes:
+			if note.file == file: break
+		return note
+	# Get Templates
+	def GetTemplates(self)->List[ETemplate]: return self.templates
+	def GetTemplateByName(self,name:str)->ETemplate:
+		template:ETemplate|None = None
+		for template in self.templates:
+			if template.get_filename() == name: break # TODO implement an EBase.get_name() for a generic name? for notes it would be the file name. libraries dir name, and templates maybe a user-provided name
+		return template
+	
+	## Create files
+	# Returns None when a note with the corresponding Gio.File
+	# Returns ENote when an Enote did not already exist with this files name
+	# TODO should it also return None when an ENote did note exist, but file.exists() returns True? I think this is the callers problem tbh (because they are handling read/write).
+	def CreateNoteFile(self,name:str)->ENote|None:
+		print(f'{DEBUG_PREFIX} Library.CreateNote')
+		file:Gio.File = self.file.get_child(name)
+		note:ENote|None = self.GetNoteByFile(file)
+		if note is not None: # note already exists
+			return None
+		note = ENote(file)
+		self._signal_note_added.emit(note)
+		return note
+	
+	def CreateUniqueNote(self, base_name:str, dot_extension:str='.txt')->ENote:
+		file_num:int = 0
+		file_name:str = f'{base_name}{dot_extension}'
+		file:Gio.File = self.file.get_child(file_name)
+		while (file.query_exists()):
+			file_num = file_num + 1
+			file_name = f'{base_name} {file_num}{dot_extension}'
+			file = self.file.get_child(file_name)
+		note = ENote(file)
+		self._signal_note_added.emit(note)
+		return note

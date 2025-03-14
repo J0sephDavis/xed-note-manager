@@ -65,7 +65,7 @@ class LibraryPanelTab(PanelTabBase):
 			self.OnLibraryAdded(None,lib)
 
 	def OnLibraryAdded(self,caller,library:ELibrary): # called by entity tracker
-		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.path}')
+		print(f'{DEBUG_PREFIX} PanelTab OnLibraryAdded path:{library.get_path()}')
 		self.__add_library_signals(ref(library))
 		node:Gtk.TreeIter = self.treeView.get_model().append(None, library.create_model_entry())
 		for note in library.notes:
@@ -94,7 +94,7 @@ class LibraryPanelTab(PanelTabBase):
 			library.disconnect(handler)
 
 	def OnNoteAdded(self,library:ELibrary, note:ENote):
-		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.path} {note.get_filename()}')
+		print(f'{DEBUG_PREFIX} PanelTab OnNoteAdded {library.get_path()} {note.get_filename()}')
 		model = self.treeView.get_model()
 		libraries:List[Gtk.TreeIter] = get_entites_from_model(model,ref(library),ModelTraverseFlags.RET_ITER)
 		for lib in libraries:

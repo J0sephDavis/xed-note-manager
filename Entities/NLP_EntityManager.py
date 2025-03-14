@@ -22,15 +22,15 @@ class EntityManager(GObject.Object): #
 # ------------------------------ signals -------------------------------------
 	@GObject.Signal(name='library-added', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_added(self_entManager, library:ELibrary):
-		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-added {library.path}')
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-added {library.get_path()}')
 
 	@GObject.Signal(name='library-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_library_removed(self_entManager, library:ELibrary):
-		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed {library.path}')
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - library-removed {library.get_path()}')
 
 	@GObject.Signal(name='daily-notes-library-updated', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def signal_daily_notes_library_updated(self_entManager, library:ELibrary|None):
-		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - daily-notes-library-updated {library.path}')
+		print(f'{DEBUG_PREFIX} EntityManager SIGNAL - daily-notes-library-updated {library.get_path()}')
 # ------------------------------ properties -------------------------------------
 	def GetLibraries(self): return self.libraries
 	def AddLibraries(self, library_paths:List[str]):
@@ -43,16 +43,16 @@ class EntityManager(GObject.Object): #
 			self.daily_notes_library = None
 		else:
 			if (self.daily_notes_library is not None\
-	   				and self.daily_notes_library.path == library_path):
+	   				and self.daily_notes_library.get_path() == library_path):
 					return
 			# TODO try-except creation of library
-			self.daily_notes_library = ELibrary(library_path)
+			self.daily_notes_library = ELibrary.from_path(library_path, True)
 		self.signal_daily_notes_library_updated.emit(self.daily_notes_library)
 # ------------------------------ callbacks -------------------------------------
 	def AddLibraryPath(self, caller, library_path:str):
 		print(f'{DEBUG_PREFIX} AddLibraryPath: {library_path}')
 		try:
-			library = ELibrary(library_path)
+			library = ELibrary.from_path(path=library_path)
 		except GLib.Error as e:
 			print(f'EXCEPTION EntityManager::AddLibrary({library_path}) GLib.Error({e.code}): {e.message}')
 			return
@@ -63,7 +63,7 @@ class EntityManager(GObject.Object): #
 		print(f'{DEBUG_PREFIX} RemoveLibraryPath: {library_path}')
 		removal:List[ELibrary] = [] #self.libraries.filter(lambda library: library.path == library_path)
 		for library in self.libraries:
-			if (library.path == library_path):
+			if (library.get_path() == library_path):
 				removal.append(library)
 		print(f'{DEBUG_PREFIX} REMOVAL[]: {removal}')
 		for library in removal:

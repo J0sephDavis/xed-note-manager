@@ -5,11 +5,8 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Xed
 from gi.repository import Gtk
 from gi.repository import Gio
-from NLP_Utils import getFileFromPath, readYAML, OpenPathInFileExplorer
-import yaml
+from NLP_Utils import OpenPathInFileExplorer
 from Entities.NLP_EntityBase import EBase
-from weakref import ref
-from typing import Dict,List,Tuple
 # BUG ---------------------------
 # open a note in a new tab
 # move the note to a new window
@@ -20,26 +17,22 @@ from typing import Dict,List,Tuple
 class ENote(EBase):
 	def __init__(self, file:Gio.File):
 		super().__init__(file=file,icon='text-x-generic')
-		self.file_read:bool = False # True ONLY if readYAML has been called already.
-		self.__yaml = None
 
-	@classmethod
-	def from_GFileInfo(cls, parent_dir:str, fileInfo:Gio.FileInfo):
-		path = f'{parent_dir}/{fileInfo.get_name()}'
-		return cls(getFileFromPath(path))
+	def open_in_explorer(self): OpenPathInFileExplorer(self.get_base_dir())
 
-	def open_in_new_tab(self, window:Xed.Window):
+	def open_in_new_tab(self, window:Xed.Window)->Xed.Tab:
 		tab:Xed.Tab = window.get_tab_from_location(self.file)
 		if tab is None:
 			tab = window.create_tab_from_location(self.file,None,0,0,True)
 		window.set_active_tab(tab)
 		return tab
 	
-	def open_in_explorer(self):
-		OpenPathInFileExplorer(self.get_path()[:-len(self.get_filename())])
-
-	def create(self, template_data):
-		outputStream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE)
-		if (template_data is not None):
-			outputStream.write_all(template_data)
-		outputStream.close()
+	# @classmethod
+	# def from_template(cls, template:ETemplate, library:ELibrary, make_unique:bool=False):
+	# 	t_name = template.ChooseFileName(library)
+	# 	t_data = template.GetContents()
+	# 	file:Gio.File =  library.file.get_child(t_name)
+	# 	if file.exists() == False:
+	# 		return ENote(file).save_file(t_data)
+	# 	if t_name is None: t_name = 'note'
+	# 	new_unique_file(library.file,t_name)
