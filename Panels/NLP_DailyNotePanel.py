@@ -8,7 +8,7 @@ from gi.repository import Xed
 from gi.repository import Gdk
 from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
-from Entities.NLP_EntityBase import EBase
+from Entities.NLP_EntityBase import EBase, model_columns
 from Entities.NLP_EntityManager import EntityManager
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
@@ -18,6 +18,8 @@ from weakref import ref
 
 class DailyNotePanel(PanelTabBase):
 	name:str = 'daily-note-panel'
+	icon_column_index:int = 0
+	name_column_index:int = 1
 	def __init__(self, window:Xed.Window,
 			display_name:str, icon_name:str, library:ELibrary,
 			app_level_menu_items:List[Gtk.MenuItem]=[]):
@@ -34,18 +36,18 @@ class DailyNotePanel(PanelTabBase):
 			panel_level_menu_items=[]
 		)
 		# ---- treeView (MUST COME AFTER super().__init__())
-		viewColumn = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0)
 		self.treeView.insert_column(
-			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),
-			position=0
+			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=model_columns.ICON),
+			position=self.icon_column_index
 		)
+		name_column = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=model_columns.NAME)
 		self.treeView.insert_column(
-			column=viewColumn,
-			position=1
+			column=name_column,
+			position=self.name_column_index
 		)
-		# TODO why does this not accept the sort type? See PanelTab for how its done. it uses the tree view?
-		viewColumn.set_sort_column_id(0) #,Gtk.SortType.DESCENDING
-		self.treeView.get_model().set_sort_column_id(0, Gtk.SortType.DESCENDING)
+		name_column.set_sort_column_id(model_columns.NAME)
+		name_column.set_sort_order(Gtk.SortType.DESCENDING)
+		name_column.set_sort_indicator(True)
 		# --- library signals
 		self.library:ELibrary = library
 		lib_handles =  self.handles[ref(self.library)] = []

@@ -8,7 +8,7 @@ from gi.repository import Xed
 from gi.repository import Gdk
 from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
-from Entities.NLP_EntityBase import EBase
+from Entities.NLP_EntityBase import EBase,model_columns
 from Entities.NLP_EntityManager import EntityManager
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
@@ -20,6 +20,8 @@ from weakref import ref
 # - select multiple notes and open/delete/perform some other action on them
 
 class LibraryPanelTab(PanelTabBase):
+	icon_column_index:int = 0
+	name_column_index:int = 1
 	def __init__(self, window:Xed.Window, internal_name:str, display_name:str, icon_name:str,
 				ent_tracker:EntityManager, app_level_menu_items:List[Gtk.MenuItem]=[]):
 		treeStore:Gtk.TreeStore = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT,str)
@@ -34,14 +36,16 @@ class LibraryPanelTab(PanelTabBase):
 		)
 		self.treeView.insert_column(
 			column=Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(),icon_name=2),
-			position=0
+			position=self.icon_column_index
 		)
+		name_column = Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=model_columns.NAME)
 		self.treeView.insert_column(
-			column=Gtk.TreeViewColumn(title='File Name', cell_renderer=Gtk.CellRendererText(),text=0),
-			position=1
+			column=name_column,
+			position=self.name_column_index
 		)
-		treeStore.set_sort_column_id(0, Gtk.SortType.DESCENDING)
-
+		name_column.set_sort_column_id(model_columns.NAME)
+		name_column.set_sort_order(Gtk.SortType.DESCENDING)
+		name_column.set_sort_indicator(True)
 		# ----- entity tracker handles -----
 		tracker_handles = self.handles[ref(ent_tracker)] = []
 		tracker_handles.append(ent_tracker.connect('library-added',self.OnLibraryAdded))
