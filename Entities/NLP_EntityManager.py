@@ -46,7 +46,7 @@ class EntityManager(GObject.Object): #
 	   				and self.daily_notes_library.get_path() == library_path):
 					return
 			# TODO try-except creation of library
-			self.daily_notes_library = ELibrary.from_path(library_path, True)
+			self.daily_notes_library = ELibrary.from_path(library_path)
 		self.signal_daily_notes_library_updated.emit(self.daily_notes_library)
 # ------------------------------ callbacks -------------------------------------
 	def AddLibraryPath(self, caller, library_path:str):
