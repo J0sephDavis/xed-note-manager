@@ -4,10 +4,10 @@ from gi.repository import GLib
 from gi.repository import Gio
 from weakref import ref
 from typing import List,Dict
-from enum import Enum
+from enum import IntEnum
 
-class model_columns(Enum): # see EBase:create_model_entry(...)
-	FILENAME 	= 0
+class model_columns(IntEnum): # see EBase:create_model_entry(...)
+	NAME 		= 0
 	REF			= 1
 	ICON		= 2
 
