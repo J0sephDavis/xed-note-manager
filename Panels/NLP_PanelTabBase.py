@@ -60,31 +60,34 @@ class PanelTabBase(Gtk.Box):
 		# ----- Popup Menu -----
 		self.menu_is_open:bool = False
 		self.menu = Gtk.Menu()
-
-		existing_note_handlers:List[Gtk.MenuItem] = [
-			new_menu_item("Open in File Explorer", self.handler_OpenNoteInFileExplorer),
+		app_level_menu_items.append(menu_separator())
+		panel_debug_items = [
+			new_menu_item("(DEBUG)Remove selected entry", self.handler_remove_selected),
+			new_menu_item("(DEBUG) TEST", self.handler_unimplemented),
+			menu_separator(),
+		]
+		panel_level_menu_items.extend(panel_debug_items)
+		panel_ebase_items = [
 			new_menu_item("Delete selected entry", self.handler_DeleteSelectedFile),
+			new_menu_item("Open in File Explorer", self.handler_OpenNoteInFileExplorer),
+			menu_separator(),
+		]
+		panel_enote_items = [
 			new_menu_item("Copy YAML to Clipboard", self.handler_CopyFrontmatter),
-		]
-		meta_note_handlers:List[Gtk.MenuItem] = [
-			new_menu_item("Create from Template", self.handler_unimplemented),
-		]
-		meta_note_handlers.extend(menu_items)
-		print(meta_note_handlers)
-		debug_menu_items:List[Gtk.MenuItem] = [
-			new_menu_item("Remove selected entry", self.handler_remove_selected),
-		]
-
-		menu_item_holder:List[List[Gtk.MenuItem]] = [
-			existing_note_handlers,
 			menu_separator(),
-			meta_note_handlers,
-			menu_separator(),
-			debug_menu_items,
 		]
-		for items in menu_item_holder:
-			for item in items:
-				self.menu.append(item)
+		panel_elibrary_items = [
+			new_menu_item("Create from Template", self.handler_create_from_template),
+			menu_separator(),
+		]
+		all_menu_items:List = 		\
+			panel_level_menu_items 	\
+			+ panel_enote_items		\
+			+ panel_elibrary_items 	\
+			+ panel_ebase_items		\
+			+ app_level_menu_items 
+		while isinstance(all_menu_items[-1], Gtk.SeparatorMenuItem): all_menu_items.pop()
+		for item in all_menu_items: self.menu.append(item)
 		self.menu.show_all()
 	# <<< METHODS >>>
 	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
