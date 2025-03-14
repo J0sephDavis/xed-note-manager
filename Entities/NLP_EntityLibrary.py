@@ -69,7 +69,8 @@ class ELibrary(EBase):
 				gfile = notes.get_child(note)
 				if note.get_name().startswith('.template'):
 					self.templates.append(ENote(gfile))
-				self.__add_note(ENote(gfile))
+				else:
+					self.__add_note(ENote(gfile))
 	
 	# initial_content: If we create the file, this will be the content of the file.
 	def CreateNote(self, filename:str,initial_content:bytes=None) -> ENote:
