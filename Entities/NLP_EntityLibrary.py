@@ -78,7 +78,8 @@ class ELibrary(EBase):
 		for note in self.notes: # Check the KNOWN notes or this file.
 			if note.get_filename() == filename:
 				return note
-		note = ENote(getFileFromPath(f'{self.path}/{filename}')) # NOTE filesystem specific separator...
+		file:Gio.File = self.file.get_child(filename)
+		note = ENote(file)
 		if (note.exists() == False):
 			note.create(initial_content)
 		#---
