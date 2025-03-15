@@ -12,6 +12,7 @@ from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityManager import EntityManager
+from Entities.NLP_EntityTemplate import ETemplate
 from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
 from typing import List,Tuple,Dict
@@ -207,31 +208,15 @@ class PanelTabBase(Gtk.Box):
 			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
 			return
 
-	def handler_create_from_template(self,widget):
+	def handler_create_from_template(self,widget, filename=None):
 		library:ELibrary = self.GetCurrentlySelectedLibrary()()
 		if library is None: return #ref died during call. (shouldn't ever happen)
 		templates:List[ENote] = library.GetTemplates()
 		if (len(templates) == 0):
 			print("no templates")
 			return
-		template_ent:ENote=templates[0]
-		template_file_info=GetFileContents(template_ent.file)
-		if (template_file_info is None): return
-		# encoding = template_file_info[1]
-		# if (encoding == 'Unknown'): encoding = 'utf-8'
-		bstr:bytes = template_file_info[0]#.decode(encoding)
-		template_maker = NLP_Template(bstr)
-		# TODO merge a map from library + panel + (maybe app?)
-		map_data_bytes = {
-			b'PROJECT': b'gamma',
-			b'CATEGORY': b'22',
-			b'BIN': b'01',
-			b'DATE': b'date.....',
-		}
-		complete_template:bytes = template_maker.custom_safe_substitute(map_data_bytes)
-		note = library.CreateUniqueNote(initial_content=complete_template)
-		# TODO focus note like the daily note routine
-
+		template_ent:ETemplate=templates[0]
+		library.CreateFromTemplate(template_ent)
 	# <<< EVENTS >>>
 	def OnNoteAdded(self, library:ELibrary, note:ENote): pass
 	def OnNoteRemoved(self, library:ELibrary, note:ENote): pass

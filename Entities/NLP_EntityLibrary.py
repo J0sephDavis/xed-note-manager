@@ -2,11 +2,14 @@ from NoteLibraryPlugin import DEBUG_PREFIX
 from gi.repository import GObject
 from gi.repository import Gio
 from NLP_Utils import getFileFromPath, OpenPathInFileExplorer, new_unique_file
-from typing import List,Callable,Tuple
+from typing import List,Callable,Dict
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityNote import ENote
 from Entities.NLP_EntityTemplate import ETemplate
 from weakref import ref
+from datetime import datetime
+
+def str_utf8(val)->bytes: return str(val).encode("utf-8")
 
 class ELibrary(EBase):
 	# Overview of attributes https://docs.gtk.org/gio/file-attributes.html
@@ -50,6 +53,18 @@ class ELibrary(EBase):
 		self.notes:List[ENote] = []
 		self.templates:List[ETemplate] = []
 		self.__get_notes_from_dir(no_clobber=False, emit_signals=False)
+
+		# TODO check for a .info or .nfo folder that has a yaml dictionary of values and merge it with this.
+		# the .info/nfo file should take precedence over the defaults.
+		self.metadata:(Dict[bytes,
+					  bytes| Callable[[bytes],bytes]| Callable[[bytes,Dict],bytes]]) = {
+						  # --- library specific
+						  b'folder_name': lambda bstr: str_utf8(self.get_filename()),
+						  b'folder_path': lambda bstr: str_utf8(self.get_path()),
+						  b'folder_dir': lambda bstr: str_utf8(self.get_base_dir()),
+						  # --- TODO factor these out
+						  b'time_now': lambda bstr: str_utf8(datetime.now()),
+		}
 	
 	def __get_notes_from_dir(self, no_clobber:bool = True, emit_signals:bool = True):
 		add_note:Callable[[ENote],None] = self._signal_note_added.emit if emit_signals else self._signal_note_added
@@ -123,4 +138,27 @@ class ELibrary(EBase):
 		note = ENote(file)
 		note.create(contents)
 		self._signal_note_added.emit(note)
+		return note
+	
+	def CreateFromTemplate(self, template:ETemplate, name:str=None, unique_base_name:str=None)->ENote:
+		data = template.generate_contents(self.metadata) # the content produced from the template and mapping
+		note:ENote = None
+		if name is not None:
+			note = self.CreateNoteFile(name=name,contents=data)
+		elif unique_base_name is not None:
+			note = self.CreateUniqueNote(base_name=unique_base_name,contents=data)
+			if note.exists():
+				print(f'{DEBUG_PREFIX} note already exists... cannot create from template. setting note=None')
+				note = None
+		# TODO
+		# elif template.supports_unique_names():
+		# 	note = self.CreateUniqueNote...
+		# elif template.has_name():
+		#	note = self.CreateNoteFile...
+		else:
+			note = self.CreateUniqueNote('Unnamed note',contents=data)
+		
+		if note is None:
+			print(f'{DEBUG_PREFIX} CreateFromTemplate, note is None')
+			return
 		return note
