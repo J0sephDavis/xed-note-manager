@@ -101,17 +101,18 @@ class ELibrary(EBase):
 	# Returns None when a note with the corresponding Gio.File
 	# Returns ENote when an Enote did not already exist with this files name
 	# TODO should it also return None when an ENote did note exist, but file.exists() returns True? I think this is the callers problem tbh (because they are handling read/write).
-	def CreateNoteFile(self,name:str)->ENote|None:
+	def CreateNoteFile(self,name:str, contents:bytes = None)->ENote|None:
 		print(f'{DEBUG_PREFIX} Library.CreateNote')
 		file:Gio.File = self.file.get_child(name)
 		note:ENote|None = self.GetNoteByFile(file)
 		if note is not None: # note already exists
 			return None
 		note = ENote(file)
+		note.create(contents)
 		self._signal_note_added.emit(note)
 		return note
 	
-	def CreateUniqueNote(self, base_name:str, dot_extension:str='.txt')->ENote:
+	def CreateUniqueNote(self, base_name:str, dot_extension:str='.txt', contents:bytes = None)->ENote:
 		file_num:int = 0
 		file_name:str = f'{base_name}{dot_extension}'
 		file:Gio.File = self.file.get_child(file_name)
@@ -120,5 +121,6 @@ class ELibrary(EBase):
 			file_name = f'{base_name} {file_num}{dot_extension}'
 			file = self.file.get_child(file_name)
 		note = ENote(file)
+		note.create(contents)
 		self._signal_note_added.emit(note)
 		return note
