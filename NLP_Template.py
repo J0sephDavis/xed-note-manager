@@ -52,7 +52,7 @@ class NLP_Template(Template):
 							return (val(argument))
 						if argument_calls_for_map is not None:
 							return (val(argument_calls_for_map,mapping))
-						return (val())
+						return (val(named))
 					return (val)
 				except (KeyError,TypeError): return mo.group()
 			if mo.group('escaped') is not None:
