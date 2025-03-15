@@ -5,6 +5,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Xed
 from gi.repository import Gtk
 from gi.repository import Gio
+from gi.repository import GLib
 from NLP_Utils import OpenPathInFileExplorer
 from Entities.NLP_EntityBase import EBase
 # BUG ---------------------------
@@ -27,12 +28,19 @@ class ENote(EBase):
 		window.set_active_tab(tab)
 		return tab
 	
-	# @classmethod
-	# def from_template(cls, template:ETemplate, library:ELibrary, make_unique:bool=False):
-	# 	t_name = template.ChooseFileName(library)
-	# 	t_data = template.GetContents()
-	# 	file:Gio.File =  library.file.get_child(t_name)
-	# 	if file.exists() == False:
-	# 		return ENote(file).save_file(t_data)
-	# 	if t_name is None: t_name = 'note'
-	# 	new_unique_file(library.file,t_name)
+	def create(self, contents:bytes) -> bool:
+		if contents is None: return False
+		if self.exists(): raise False
+		ostream:Gio.FileOutputStream = self.file.create(Gio.FileCreateFlags.NONE,None)
+		if ostream is None: return False
+		try:
+			is_success,bytes_written = ostream.write_all(contents,None)
+			if is_success:
+				print(f'{DEBUG_PREFIX} ENote.create, wrote {bytes_written} bytes to file {self.get_path()}')
+			else:
+				print(f'{DEBUG_PREFIX} ENote.create, is_success==FALSE, wrote {bytes_written} bytes to file {self.get_path()}')
+		except GLib.Error as e:
+			print(f'-----\n{DEBUG_PREFIX} EXCEPTION in ENote.Create:\ndomain:{e.domain}\tcode{e.code}\targs{e.args}\nmessage:{e.message}\n-----')
+		finally:
+			ostream.close()
+		return is_success
