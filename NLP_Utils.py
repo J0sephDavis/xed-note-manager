@@ -9,7 +9,7 @@ from gi.repository import Gtk
 from typing import List,Tuple
 import yaml
 import subprocess
-import chardet
+# import chardet
 __read_buffer_length = 64
 
 # returns a GFile that does not exist
@@ -28,16 +28,16 @@ def new_unique_file(directory:Gio.File, default_file_name:str) -> Gio.File:
 	print(f'{DEBUG_PREFIX} new_unique_file: {_file.get_basename()}')
 	return _file
 
-def GetFileContents(file:Gio.File)->Tuple[bytes,str]|None: #contents, encoding
+def GetFileContents(file:Gio.File)->bytes|None:#Tuple[bytes,str]|None: #contents, encoding
 	is_load_successful,contents,etag_out = file.load_contents()
 	if (not is_load_successful):
 		return None
-	if (len(contents) > 256):
-		enc_inf = chardet.detect(contents[:256])
-	else:
-		enc_inf = chardet.detect(contents)
-	print(f'{DEBUG_PREFIX} getFileContents encoding={enc_inf.get('encoding')}')
-	return contents, enc_inf.get('encoding','Unknown')
+	# if (len(contents) > 256):
+	# 	enc_inf = chardet.detect(contents[:256])
+	# else:
+	# 	enc_inf = chardet.detect(contents)
+	# print(f'{DEBUG_PREFIX} getFileContents encoding={enc_inf.get('encoding')}')
+	return contents #, enc_inf.get('encoding','Unknown')
 
 def __getLine(inputStream:Gio.FileInputStream) -> bytes|None:
 	byte_array:GLib.Bytes|None;
