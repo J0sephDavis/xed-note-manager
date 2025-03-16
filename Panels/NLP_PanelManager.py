@@ -53,12 +53,11 @@ class SidePanelManager():
 	def handle_note_focus_request(self, note:ENote, daily_note:bool=False):
 		print(f'{DEBUG_PREFIX} handle_note_focus_request')
 		if (daily_note):
-			panel:DailyNotePanel = self.getTab('daily-notes')
+			panel:DailyNotePanel = self.getTab(DailyNotePanel.name)
 			panel.TryFocusNote(note)
 			self.side_panel.activate_item(panel) # switches to the tab
 		else:
 			panel:PanelTabBase = None
-			note_path:Gtk.TreePath = None
 			for panel in self.panels:
 				if (panel.TryFocusNote(note)):
 					self.side_panel.activate_item(panel) # switches to the tab
