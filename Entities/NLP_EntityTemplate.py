@@ -25,7 +25,16 @@ class ETemplate(EBase): # TODO check if the file has been updated (maybe this is
 	def __init__(self, file:Gio.File):
 		super().__init__(file,None)
 		self.template:NLP_Template = None
-		self.identifier:str = file.get_name()[:self.template_extension_len]
+		fname = file.get_basename()
+		index = fname.rfind(self.template_extension)
+		if index == 0:
+			fname = 'default' # TODO this seems... wrong. eventually someone will make default.template and they will conflict
+		else:
+			fname = fname[:index]
+		self.identifier:str = fname
+		if self.identifier == '': self.identifier = fname
+
+		print(self.identifier)
 		self.t_body:bytes = None
 		self.t_name:Tuple[FileNameEnum,bytes]|None = None # file_name_type:FileNameEnum, the template string:bytes # converted from bytes to string in generate_filename()
 		self.load_file()
