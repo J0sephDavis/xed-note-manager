@@ -81,7 +81,7 @@ class ELibrary(EBase):
 		note_arr:List[Gio.FileInfo] = []
 		for file_info in directory_enumerator:
 			if file_info.get_file_type() != Gio.FileType.REGULAR: continue
-			if file_info.get_name().endswith('.template'):
+			if file_info.get_name().endswith(ETemplate.template_extension):
 				template_arr.append(file_info)
 			else:
 				note_arr.append(file_info)
