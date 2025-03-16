@@ -112,20 +112,52 @@ class ELibrary(EBase):
 			if template.get_filename() == name: break # TODO implement an EBase.get_name() for a generic name? for notes it would be the file name. libraries dir name, and templates maybe a user-provided name
 		return template
 	
-	## Create files
-	# Returns None when a note with the corresponding Gio.File
-	# Returns ENote when an Enote did not already exist with this files name
-	# TODO should it also return None when an ENote did note exist, but file.exists() returns True? I think this is the callers problem tbh (because they are handling read/write).
-	def CreateNoteFile(self,name:str, contents:bytes = None)->ENote|None:
-		print(f'{DEBUG_PREFIX} Library.CreateNote')
-		file:Gio.File = self.file.get_child(name)
+	# returns (created_file:bool, note:ENote)
+	def CreateNote_StartsWith(self,name:str, extension:str, contents:bytes)->Tuple[bool,ENote]:
+		print(f'{DEBUG_PREFIX} CreateNote_StartsWith {name}\t{extension}')
+		directory_enumerator:Gio.FileEnumerator = self.file.enumerate_children(
+			self.search_attributes,
+			Gio.FileQueryInfoFlags.NONE,
+			None
+		)
+		matching_children:List[Gio.FileInfo] = [child for child in directory_enumerator if child.get_name().startswith(name)]
+		if len(matching_children) == 0:
+			print(f'{DEBUG_PREFIX} No file starting with {name}, creating.')
+			return self.CreateNoteFile(
+				name=name,
+				extension=extension,
+				contents=contents
+			)
+		# File starting with the substring exists already.
+		if len(matching_children) > 1: print(f'{DEBUG_PREFIX} CreateNote_StartsWith, multiple files with name already exist..... 0th index will be used regardless.')
+		file:Gio.File = directory_enumerator.get_child(matching_children[0])
+		# Does it already have an entity?
+		note:ENote|None =  self.GetNoteByFile(file)
+		if note is None:
+			print(f'{DEBUG_PREFIX} There was no ENote with the given name, but the file already existed. So we are adding it to the list')
+			note = ENote(file)
+			self._signal_note_added.emit(note)
+		return (False,note)
+				
+	# returns (created_file:bool, note:ENote)
+	def CreateNoteFile(self,name:str, extension:str, contents:bytes)->Tuple[bool,ENote]:
+		file_name = f'{name}{extension}'
+		file:Gio.File = self.file.get_child(file_name)
+		print(f'{DEBUG_PREFIX} Library.CreateNote {file_name}')
+		
 		note:ENote|None = self.GetNoteByFile(file)
 		if note is not None: # note already exists
-			return None
+			print(f'{DEBUG_PREFIX} note already exists')
+			return (False,note)
+		
 		note = ENote(file)
+		if note.exists(): # note already exists in file system. TODO add note to the panel because it should probably be there if it has been seen here
+			print(f'{DEBUG_PREFIX} file already exists')
+			self._signal_note_added(note) # because it wasn't found in GetNoteByFile
+			return (False,note)
 		note.create(contents)
 		self._signal_note_added.emit(note)
-		return note
+		return (True,note)
 	
 	# returns (created_file:bool, note:ENote)
 	def CreateUniqueNote(self, name:str, extension:str, contents:bytes)->Tuple[bool,ENote]:
@@ -152,7 +184,7 @@ class ELibrary(EBase):
 		elif name_enum == FileNameEnum.IMMUTABLE_NAME:
 			retval = self.CreateNoteFile(name=name, extension=extension, contents=t_body)
 		elif name_enum == FileNameEnum.STARTSWITH_NAME:
-			retval = self.CreateNote_StartsWith(name_startswith=name, extension=extension ,contents=t_body)
+			retval = self.CreateNote_StartsWith(name=name, extension=extension ,contents=t_body)
 
 		if retval[1] is None:
 			print(f'{DEBUG_PREFIX} WARNING CreateFromTemplate, note is None')
