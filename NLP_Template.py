@@ -7,14 +7,15 @@ from typing import Callable
 def prepare_template_pattern(cls:Template)->bytes:
 	delim = re.escape(cls.delimiter)
 	id = cls.idpattern
+	argument_pattern = r'[ -~]*' # basically all ASCII. Alternatively, we could accept r"[!-'*-Z^-z\~|]*" for no braces and no brackets
 	bid = cls.braceidpattern or cls.idpattern
 	pattern = fr"""
 	{delim}(?:
 		(?P<escaped>{delim})  |   # Escape sequence of two delimiters
 		(?P<named_with_arg>{id})
 			(?:
-				\((?P<argument>{id})\)           |
-				\{{(?P<argument_with_map>{id})}}
+				\((?P<argument>{argument_pattern})\)           |
+				\{{(?P<argument_with_map>{argument_pattern})}}
 			)				  |
 		(?P<named>{id})       |   # delimiter and a Python identifier
 		{{(?P<braced>{bid})}} |   # delimiter and a braced identifier # I would remove this, but it would break the other class methods. It would be better to make a new class without inheritance...
