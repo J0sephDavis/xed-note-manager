@@ -68,7 +68,6 @@ class ELibrary(EBase):
 	
 	def __get_notes_from_dir(self, no_clobber:bool = True, emit_signals:bool = True):
 		add_note:Callable[[ENote],None] = self._signal_note_added.emit if emit_signals else self._signal_note_added
-		add_template = self.templates.append
 		# ---
 		directory_enumerator:Gio.FileEnumerator = self.file.enumerate_children(
 			self.search_attributes,
@@ -76,22 +75,31 @@ class ELibrary(EBase):
 			None
 		)
 		# ---
-		file_info:Gio.FileInfo = None
-		ent:ETemplate|ENote = None
-		arr:List[ETemplate]|List[ENote] = None
+		file_info:Gio.FileInfo
+		template_arr:List[Gio.FileInfo] = []
+		note_arr:List[Gio.FileInfo] = []
 		for file_info in directory_enumerator:
 			if file_info.get_file_type() != Gio.FileType.REGULAR: continue
-			file:Gio.File = directory_enumerator.get_child(file_info)
-			if file_info.get_name().startswith('.template'):
-				ent = ETemplate(file)
-				arr = self.templates
-				append = add_template
+			if file_info.get_name().endswith('.template'):
+				template_arr.append(file_info)
 			else:
-				ent = ENote(file)
-				arr = self.notes
-				append = add_note
-			if no_clobber and ent in arr: continue
-			append(ent)
+				note_arr.append(file_info)
+		
+		file:Gio.File
+		for file_info in template_arr:
+			file = directory_enumerator.get_child(file_info)
+			template = ETemplate(file)
+			if no_clobber and template in template_arr:
+				continue
+			self.templates.append(file)
+
+		for file_info in note_arr:
+			file = directory_enumerator.get_child(file_info)
+			note = ENote(file)
+			if no_clobber and note in note_arr:
+				continue
+			add_note(note)
+		
 	# Get Notes
 	def GetNotes(self)->List[ENote]: return self.notes
 	def GetNoteByName(self,name:str)->ENote|None:
