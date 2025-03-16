@@ -37,7 +37,6 @@ class ELibrary(EBase):
 		handles.append(note.connect('file-deleted', self._signal_note_removed.emit))
 	@GObject.Signal(name='note-removed', flags=GObject.SignalFlags.RUN_LAST, arg_types=(GObject.TYPE_PYOBJECT,))
 	def _signal_note_removed(self,note:ENote): # RUN_FIRST
-		self.notes.append(note)
 		nref = ref(note)
 		if nref not in self.handlers:
 			return
