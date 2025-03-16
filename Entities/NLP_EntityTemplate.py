@@ -15,9 +15,11 @@ class FileNameEnum(IntEnum):
 from NLP_Template import NLP_Template
 class ETemplate(EBase): # TODO check if the file has been updated (maybe this is handled by ELibrary who monitors the dir)
 	default_unique_filename:bytes = b'Note'
-	unique_filename_delimieter:bytes = b'#'
-	normal_filename_delimieter:bytes = b'@'
-	startswith_filename_delimieter:bytes = b'^'
+	default_file_extension:str = ''
+
+	unique_filename_delimiter:bytes = b'#'
+	normal_filename_delimiter:bytes = b'@'
+	startswith_filename_delimiter:bytes = b'^'
 
 	template_extension='.template'
 	template_extension_len=len(template_extension)
@@ -51,11 +53,11 @@ class ETemplate(EBase): # TODO check if the file has been updated (maybe this is
 			return success
 		
 		file_name_type:FileNameEnum;
-		if contents.startswith(self.unique_filename_delimieter):
+		if contents.startswith(self.unique_filename_delimiter):
 			file_name_type = FileNameEnum.MAKE_UNIQUE_NAME
-		elif contents.startswith(self.startswith_filename_delimieter):
+		elif contents.startswith(self.startswith_filename_delimiter):
 			file_name_type = FileNameEnum.STARTSWITH_NAME
-		elif contents.startswith(self.normal_filename_delimieter):
+		elif contents.startswith(self.normal_filename_delimiter):
 			file_name_type = FileNameEnum.PRESET_NAME
 		else:
 			file_name_type = None
@@ -82,12 +84,18 @@ class ETemplate(EBase): # TODO check if the file has been updated (maybe this is
 
 		fname:bytes = self.template.custom_safe_substitute(value_map)
 		last_dot = fname.rfind(b'.')
-		extension:str = fname[last_dot:].decode('utf-8')
-		name:str = fname[:last_dot].decode('utf-8')
+		name:bytes
+		extension:str
+		if last_dot == -1:
+			extension = self.default_file_extension
+			name = self.default_unique_filename.decode('utf-8')
+		else:
+			# TODO chardet to handle utf-16 / chinese
+			extension:str = fname[last_dot:].decode('utf-8')
+			name:str = fname[:last_dot].decode('utf-8')
 		print(f'name: {name}')
 		print(f'ext: {extension}')
 		return self.t_name[0],name,extension
-		# return self.t_name[0],fname.decode('utf-8') # TODO chardet to handle utf-16 / chinese
 	
 	def generate_contents(self,value_map:(Dict[bytes,				# key value must be a byte string
 							# in addition to these, you could probably add
