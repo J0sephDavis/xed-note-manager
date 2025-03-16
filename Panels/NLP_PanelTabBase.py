@@ -134,8 +134,7 @@ class PanelTabBase(Gtk.Box):
 		return found[0]
 	
 	def TryFocusNote(self,note:ENote)->bool:
-		print(f'{DEBUG_PREFIX} EXCEPTION PanelTabBase.TryFocusNote NOT IMPLEMENTED')
-		return False
+		raise NotImplemented("paneltab base TryFocusNote not implemented")
 
 	# <<< HANDLERS >>>
 	def handler_button_released(self, view:Gtk.TreeView, event):
