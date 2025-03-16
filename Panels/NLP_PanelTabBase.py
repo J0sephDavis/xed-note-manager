@@ -17,6 +17,15 @@ from NLP_PrivateData import PrivateData
 from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
 from typing import List,Tuple,Dict
 from weakref import ref
+
+def create_template_submenu(templates:List[ETemplate], handler:Callable):
+	menu = Gtk.Menu()
+	for template in templates:
+		print(template.identifier)
+		menu.append(new_menu_item(template.identifier,handler,template))
+	menu.show_all()
+	return menu
+
 class PanelTabBase(Gtk.Box):
 
 	def GetWidget(self): return self;
