@@ -6,7 +6,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GLib
 from gi.repository import Gio
 from gi.repository import Gtk
-from typing import List,Tuple
+from typing import List,Tuple,Callable
 import yaml
 import subprocess
 # import chardet
@@ -110,7 +110,7 @@ def OpenPathInFileExplorer(path:str):
 def menu_separator():
 	return Gtk.SeparatorMenuItem()
 
-def new_menu_item(label:str, on_activate_method):
+def new_menu_item(label:str, handler:Callable, *args):
 	item = Gtk.MenuItem.new_with_label(label)
-	item.connect('activate', on_activate_method)
+	item.connect('activate', handler, *args)
 	return item
