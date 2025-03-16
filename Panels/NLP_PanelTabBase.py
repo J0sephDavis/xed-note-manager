@@ -215,7 +215,10 @@ class PanelTabBase(Gtk.Box):
 			print("no templates")
 			return
 		template_ent:ETemplate=templates[0]
-		library.CreateFromTemplate(template_ent)
+		note_was_created, note = library.CreateFromTemplate(template_ent)
+		self.TryFocusNote(note)
+		note.open_in_new_tab(self.window)
+
 	# <<< EVENTS >>>
 	def OnNoteAdded(self, library:ELibrary, note:ENote): pass
 	def OnNoteRemoved(self, library:ELibrary, note:ENote): pass
