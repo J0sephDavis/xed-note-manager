@@ -38,22 +38,3 @@ class PrivateData():
 	def __del__(self):
 		self.entTracker.deactivate()
 		self.entTracker = None
-	
-	def CreateDailyNote(self) -> ENote:
-		lib = self.entTracker.daily_notes_library
-		if lib is None: return None
-		date:datetime = datetime.now()
-		date_str:str = date.strftime(r'%Y-%m-%d')
-		found_note:ENote|None = None
-		for note in lib.GetNotes():
-			filename = note.get_filename()
-			print(f'{filename}')
-			if filename.startswith(date_str):
-				print(f'NOTE FOUND: {filename}')
-				found_note = note
-				break
-		if (found_note is None):
-			found_note = lib.CreateNote(f'{date_str} Daily Note.txt') # TODO configurable name
-		
-		print(f'{DEBUG_PREFIX} CreateDailyNote date_str:{found_note.get_filename()}')
-		return found_note
