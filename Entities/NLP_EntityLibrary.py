@@ -1,7 +1,7 @@
 from NoteLibraryPlugin import DEBUG_PREFIX
 from gi.repository import GObject
 from gi.repository import Gio
-from NLP_Utils import getFileFromPath, OpenPathInFileExplorer, new_unique_file
+from NLP_Utils import getFileFromPath, OpenPathInFileExplorer
 from typing import List,Callable,Dict,Tuple
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityNote import ENote
@@ -91,7 +91,7 @@ class ELibrary(EBase):
 			template = ETemplate(file)
 			if no_clobber and template in template_arr:
 				continue
-			self.templates.append(file)
+			self.templates.append(template)
 
 		for file_info in note_arr:
 			file = directory_enumerator.get_child(file_info)
