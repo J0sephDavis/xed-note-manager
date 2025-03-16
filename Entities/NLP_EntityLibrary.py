@@ -140,25 +140,19 @@ class ELibrary(EBase):
 		self._signal_note_added.emit(note)
 		return note
 	
-	def CreateFromTemplate(self, template:ETemplate, name:str=None, unique_base_name:str=None)->ENote:
-		data = template.generate_contents(self.metadata) # the content produced from the template and mapping
+	# returns (created_file:bool, note:ENote)
+	def CreateFromTemplate(self, template:ETemplate)->Tuple[bool,ENote]:
+		name_enum,name,extension = template.generate_filename(self.metadata)
+		t_body:bytes = template.generate_contents(self.metadata) # the content produced from the template and mapping
+
 		note:ENote = None
-		if name is not None:
-			note = self.CreateNoteFile(name=name,contents=data)
-		elif unique_base_name is not None:
-			note = self.CreateUniqueNote(base_name=unique_base_name,contents=data)
-			if note.exists():
-				print(f'{DEBUG_PREFIX} note already exists... cannot create from template. setting note=None')
-				note = None
-		# TODO
-		# elif template.supports_unique_names():
-		# 	note = self.CreateUniqueNote...
-		# elif template.has_name():
-		#	note = self.CreateNoteFile...
-		else:
-			note = self.CreateUniqueNote('Unnamed note',contents=data)
-		
-		if note is None:
-			print(f'{DEBUG_PREFIX} CreateFromTemplate, note is None')
-			return
-		return note
+		if name_enum == FileNameEnum.MAKE_UNIQUE_NAME:
+			retval = self.CreateUniqueNote(name=name, extension=extension, contents=t_body)
+		elif name_enum == FileNameEnum.IMMUTABLE_NAME:
+			retval = self.CreateNoteFile(name=name, extension=extension, contents=t_body)
+		elif name_enum == FileNameEnum.STARTSWITH_NAME:
+			retval = self.CreateNote_StartsWith(name_startswith=name, extension=extension ,contents=t_body)
+
+		if retval[1] is None:
+			print(f'{DEBUG_PREFIX} WARNING CreateFromTemplate, note is None')
+		return retval
