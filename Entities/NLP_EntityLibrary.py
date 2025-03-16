@@ -104,10 +104,9 @@ class ELibrary(EBase):
 	# Get Notes
 	def GetNotes(self)->List[ENote]: return self.notes
 	def GetNoteByName(self,name:str)->ENote|None:
-		note:ENote|None = None
 		for note in self.notes:
 			if note.get_filename() == name: break
-		return note
+		return None
 	def GetNoteByFile(self,file:Gio.File)->ENote|None:
 		for note in self.notes:
 			if note.file.equal(file): return note
@@ -115,10 +114,9 @@ class ELibrary(EBase):
 	# Get Templates
 	def GetTemplates(self)->List[ETemplate]: return self.templates
 	def GetTemplateByName(self,name:str)->ETemplate:
-		template:ETemplate|None = None
 		for template in self.templates:
-			if template.get_filename() == name: break # TODO implement an EBase.get_name() for a generic name? for notes it would be the file name. libraries dir name, and templates maybe a user-provided name
-		return template
+			if template.identifier == name: break # TODO implement an EBase.get_name() for a generic name? for notes it would be the file name. libraries dir name, and templates maybe a user-provided name
+		return None
 	
 	# returns (created_file:bool, note:ENote)
 	def CreateNote_StartsWith(self,name:str, extension:str, contents:bytes)->Tuple[bool,ENote]:
