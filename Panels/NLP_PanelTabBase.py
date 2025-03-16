@@ -16,11 +16,11 @@ from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags
 from typing import List,Tuple,Dict,Callable
 from weakref import ref
 
-def create_template_submenu(templates:List[ETemplate], handler:Callable):
+def create_template_submenu(library:ELibrary,templates:List[ETemplate], handler:Callable):
 	menu = Gtk.Menu()
 	for template in templates:
 		print(template.identifier)
-		menu.append(new_menu_item(template.identifier,handler,template))
+		menu.append(new_menu_item(template.identifier,handler,template,library))
 	menu.show_all()
 	return menu
 
@@ -147,7 +147,7 @@ class PanelTabBase(Gtk.Box):
 			# Maybe..., when adding menu items to the menu use a tuple of (MenuItem, func()) where func(menuitem) is run to determine if its shown or not... if all functions return False hide the separator as if it were never there..
 			self.menu_items_library[-1].hide() #separator
 			return
-		self.menu_template_sub_menu.set_submenu(create_template_submenu(templates,self.handler_create_from_template))
+		self.menu_template_sub_menu.set_submenu(create_template_submenu(lib,templates,self.handler_create_from_template))
 		self.menu_template_sub_menu.show_all()
 		self.menu_items_library[-1].show() #separator
 
@@ -271,15 +271,8 @@ class PanelTabBase(Gtk.Box):
 			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
 			return
 
-	def handler_create_from_template(self,widget,template:ETemplate):
-		library:ELibrary = self.GetCurrentlySelectedLibrary()()
-		if library is None: return #ref died during call. (shouldn't ever happen)
-		templates:List[ENote] = library.GetTemplates()
-		if (len(templates) == 0):
-			print("no templates")
-			return
-		template_ent:ETemplate=templates[0]
-		note_was_created, note = library.CreateFromTemplate(template_ent)
+	def handler_create_from_template(self,widget,template:ETemplate,library:ELibrary):
+		note_was_created, note = library.CreateFromTemplate(template)
 		self.TryFocusNote(note)
 		note.open_in_new_tab(self.window)
 
