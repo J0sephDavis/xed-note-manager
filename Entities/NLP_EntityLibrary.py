@@ -127,18 +127,19 @@ class ELibrary(EBase):
 		self._signal_note_added.emit(note)
 		return note
 	
-	def CreateUniqueNote(self, base_name:str, dot_extension:str='.txt', contents:bytes = None)->ENote:
+	# returns (created_file:bool, note:ENote)
+	def CreateUniqueNote(self, name:str, extension:str, contents:bytes)->Tuple[bool,ENote]:
 		file_num:int = 0
-		file_name:str = f'{base_name}{dot_extension}'
+		file_name:str = f'{name}{extension}'
 		file:Gio.File = self.file.get_child(file_name)
 		while (file.query_exists()):
 			file_num = file_num + 1
-			file_name = f'{base_name} {file_num}{dot_extension}'
+			file_name = f'{name} {file_num}{extension}'
 			file = self.file.get_child(file_name)
 		note = ENote(file)
 		note.create(contents)
 		self._signal_note_added.emit(note)
-		return note
+		return (True,note)
 	
 	# returns (created_file:bool, note:ENote)
 	def CreateFromTemplate(self, template:ETemplate)->Tuple[bool,ENote]:
