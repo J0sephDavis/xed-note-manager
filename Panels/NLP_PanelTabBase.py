@@ -7,15 +7,13 @@ from gi.repository import GObject
 from gi.repository import Xed
 from gi.repository import Gtk
 from gi.repository import Gdk
-from NLP_Template import NLP_Template
 from Entities.NLP_EntityLibrary import ELibrary
 from Entities.NLP_EntityNote import ENote
 from Entities.NLP_EntityBase import EBase
-from Entities.NLP_EntityManager import EntityManager
 from Entities.NLP_EntityTemplate import ETemplate
 from NLP_PrivateData import PrivateData
-from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags, del_entries_from_model
-from typing import List,Tuple,Dict
+from Panels.NLP_TreeViewUtils import get_entites_from_model, ModelTraverseFlags
+from typing import List,Tuple,Dict,Callable
 from weakref import ref
 
 def create_template_submenu(templates:List[ETemplate], handler:Callable):
@@ -31,7 +29,13 @@ class PanelTabBase(Gtk.Box):
 	def GetWidget(self): return self;
 
 	def do_deactivate(self):
+		self.window = None
+		
+		self.menu_items_base = []
+		self.menu_items_note = []
+		self.menu_items_library = []
 		self.menu.foreach(lambda widget: widget.destroy())
+
 		for obj in self.handles:
 			ent = obj()
 			# assumed to be our most common case
@@ -42,6 +46,7 @@ class PanelTabBase(Gtk.Box):
 				for handle in self.handles[obj]:
 					ent.disconnect(handle)
 		self.handles.clear()
+
 		self.plugin_private_Data = None
 		self.treeView.get_model().clear()
 	
@@ -68,9 +73,26 @@ class PanelTabBase(Gtk.Box):
 
 		self.pack_start(self.treeView,True,True,0)
 		self.show_all()
-		# ----- Popup Menu -----
+		## ----- Popup Menu -----
+		# TODO use separate lists so that they can be iterated over to do .show and .hide quickly
 		self.menu_is_open:bool = False
 		self.menu = Gtk.Menu()
+		# template sub menu state
+		self.menu_template_sub_menu = Gtk.MenuItem("Templates")
+		self.last_selected_lib:ref[ELibrary] = None # used when checking if we should update the template_sub_menu
+		self.menu_items_library = [
+			self.menu_template_sub_menu,
+			menu_separator()
+		]
+		# Note handlers
+		self.menu_items_note = [new_menu_item("Copy YAML to Clipboard", self.handler_CopyFrontmatter),menu_separator()]
+		# Base entity handlers (never hidden because everything is an entity? Except the day when there are 0 notes in a directory.... Open in explorer works without visible entities, but Delete definitely does not)
+		self.menu_items_base = [
+			new_menu_item("Delete entry", self.handler_DeleteSelectedFile),
+			new_menu_item("Open in Explorer", self.handler_OpenNoteInFileExplorer),
+			menu_separator(),
+		]
+		# ---
 		app_level_menu_items.append(menu_separator())
 		panel_debug_items = [
 			new_menu_item("(DEBUG)Remove selected entry", self.handler_remove_selected),
@@ -78,32 +100,67 @@ class PanelTabBase(Gtk.Box):
 			menu_separator(),
 		]
 		panel_level_menu_items.extend(panel_debug_items)
-		panel_ebase_items = [
-			new_menu_item("Delete selected entry", self.handler_DeleteSelectedFile),
-			new_menu_item("Open in File Explorer", self.handler_OpenNoteInFileExplorer),
-			menu_separator(),
-		]
-		panel_enote_items = [
-			new_menu_item("Copy YAML to Clipboard", self.handler_CopyFrontmatter),
-			menu_separator(),
-		]
-		panel_elibrary_items = [
-			new_menu_item("Create from Template", self.handler_create_from_template),
-			menu_separator(),
-		]
+
+		panel_entity_entries = []
+		panel_entity_entries.extend(self.menu_items_base)
+		panel_entity_entries.extend(self.menu_items_note)
+		panel_entity_entries.extend(self.menu_items_library)
+		
 		all_menu_items:List = 		\
 			panel_level_menu_items 	\
-			+ panel_enote_items		\
-			+ panel_elibrary_items 	\
-			+ panel_ebase_items		\
-			+ app_level_menu_items 
-		while isinstance(all_menu_items[-1], Gtk.SeparatorMenuItem): all_menu_items.pop()
+			+ panel_entity_entries	\
+			+ app_level_menu_items
+		
 		for item in all_menu_items: self.menu.append(item)
 		self.menu.show_all()
+		self.menu.connect('show',self._menu_show_routine)
+	# --- Gtk Menu
+	def _menu_show_routine(self,menu):
+		self._menu_show_library(menu)
+		self._menu_show_note(menu)
+		self._menu_remove_trailing_separators(menu)
+
+	def _menu_remove_trailing_separators(self,menu):
+		for item in reversed(menu.get_children()):
+			if (item.props.visible):
+				if isinstance(item,Gtk.SeparatorMenuItem):
+					item.hide()
+				else: return
+
+	def _menu_show_library(self,menu):
+		lib = self.GetCurrentlySelectedLibrary()
+		if lib == self.last_selected_lib: return
+		else: self.last_selected_lib = lib
+		lib = lib()
+		if lib is None:
+			for item in self.menu_items_library:
+				item.hide()
+			return
+		
+		templates:List[ETemplate] = lib.GetTemplates()
+		if templates is None or len(templates) == 0:
+			self.menu_template_sub_menu.hide()
+			# TODO currently there is only one element in the libraries section. but
+			# in the future we will want to check if ANY are visible before hiding
+			# this / if its the last separator in the list..
+			
+			# Maybe..., when adding menu items to the menu use a tuple of (MenuItem, func()) where func(menuitem) is run to determine if its shown or not... if all functions return False hide the separator as if it were never there..
+			self.menu_items_library[-1].hide() #separator
+			return
+		self.menu_template_sub_menu.set_submenu(create_template_submenu(templates,self.handler_create_from_template))
+		self.menu_template_sub_menu.show_all()
+		self.menu_items_library[-1].show() #separator
+
+	def _menu_show_note(self,menu):
+		iter,base_ref = self.GetCurrentlySelected()
+		if type(base_ref()) is ENote:
+			for item in self.menu_items_note: item.show()
+		else:
+			for item in self.menu_items_note: item.hide()
+
 	# <<< METHODS >>>
 	# # returns the library associated with the currently selected entry.
 	def GetCurrentlySelectedLibrary(self)->ref[ELibrary]|None:
-		print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary')
 		selection = self.treeView.get_selection()
 		if selection.get_mode() == Gtk.SelectionMode.MULTIPLE:
 			return None
@@ -111,7 +168,6 @@ class PanelTabBase(Gtk.Box):
 		if iter is None: return None
 		entry = model[iter][1]
 		if issubclass(type(entry()),ELibrary):
-			print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary, entry={entry}')
 			return entry
 		parent_iter = model.iter_parent(iter)
 		if parent_iter is None:
@@ -119,7 +175,6 @@ class PanelTabBase(Gtk.Box):
 			return None
 		entry = model[parent_iter][1]
 		if issubclass(type(entry()), ELibrary):
-			print(f'{DEBUG_PREFIX} GetCurrentlySelectedLibrary, entry={entry}')
 			return entry
 	# returns the TreeIter to the currently highlight row + a weakref to entity
 	def GetCurrentlySelected(self)->Tuple[Gtk.TreeIter,ref[EBase]]:
@@ -216,7 +271,7 @@ class PanelTabBase(Gtk.Box):
 			print(f'{DEBUG_PREFIX} ERR remove_selected unhandled entity, {type(entry_ent)}')
 			return
 
-	def handler_create_from_template(self,widget, filename=None):
+	def handler_create_from_template(self,widget,template:ETemplate):
 		library:ELibrary = self.GetCurrentlySelectedLibrary()()
 		if library is None: return #ref died during call. (shouldn't ever happen)
 		templates:List[ENote] = library.GetTemplates()
