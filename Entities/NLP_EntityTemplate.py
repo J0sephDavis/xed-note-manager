@@ -4,8 +4,13 @@ from gi.repository import GLib
 from gi.repository import Gio
 from Entities.NLP_EntityBase import EBase
 from NLP_Utils import GetFileContents
-from typing import Callable, List
+from typing import Callable, List,Tuple,Dict
 import re
+from enum import IntEnum,auto
+class FileNameEnum(IntEnum):
+	MAKE_UNIQUE_NAME = auto()
+	IMMUTABLE_NAME = auto()
+	STARTSWITH_NAME = auto() # similar to static, but the name must start with the templated value. Nice for daily notes
 # from Entities.NLP_EntityLibrary import ELibrary
 from NLP_Template import NLP_Template
 class ETemplate(EBase): # TODO check if the file has been updated (maybe this is handled by ELibrary who monitors the dir)

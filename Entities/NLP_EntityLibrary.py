@@ -2,10 +2,10 @@ from NoteLibraryPlugin import DEBUG_PREFIX
 from gi.repository import GObject
 from gi.repository import Gio
 from NLP_Utils import getFileFromPath, OpenPathInFileExplorer, new_unique_file
-from typing import List,Callable,Dict
+from typing import List,Callable,Dict,Tuple
 from Entities.NLP_EntityBase import EBase
 from Entities.NLP_EntityNote import ENote
-from Entities.NLP_EntityTemplate import ETemplate
+from Entities.NLP_EntityTemplate import ETemplate,FileNameEnum
 from weakref import ref
 from datetime import datetime
 
@@ -64,6 +64,7 @@ class ELibrary(EBase):
 						  b'folder_dir': lambda bstr: str_utf8(self.get_base_dir()),
 						  # --- TODO factor these out
 						  b'time_now': lambda bstr: str_utf8(datetime.now()),
+						  b'strftime': lambda bstr: str_utf8(datetime.strftime(datetime.now(), bstr.decode('utf-8'))) # what are you doing....
 		}
 	
 	def __get_notes_from_dir(self, no_clobber:bool = True, emit_signals:bool = True):
