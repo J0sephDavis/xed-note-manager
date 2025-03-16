@@ -139,11 +139,14 @@ class NoteLibraryPlugin(GObject.Object, Xed.WindowActivatable, PeasGtk.Configura
 	# request the panel current side pane with the note to be focussed
 	# opens the note in a new tab
 	def DailyNoteRoutine(self,*args) -> ENote|None:
-		note:ENote = self.PluginPrivate.CreateDailyNote()
-		print(f'{DEBUG_PREFIX} DailyNoteRoutine.note {note}')
-		if (note is None):
-			print(f'{DEBUG_PREFIX} could not create daily note...')
-			return
-		self.panel_manager.handle_note_focus_request(note=note, daily_note=True)
-		note.open_in_new_tab(self.window)
+		lib = self.PluginPrivate.entTracker.daily_notes_library
+		if lib is None: return # no daily notes library, no daily notes.
+		daily_note_template = lib.GetTemplateByName('default')
+		if daily_note_template is None:
+			templates = lib.GetTemplates()
+			if templates is None or len(templates) ==0: return # no templates
+			daily_note_template = templates[0] # just use the first one
+		was_created,note = lib.CreateFromTemplate(daily_note_template)
+		self.panel_manager.focus_note(note,DailyNotePanel.name)
+		note.open_in_new_tab(self.window)		
 		return note
