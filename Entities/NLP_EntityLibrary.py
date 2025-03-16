@@ -108,10 +108,9 @@ class ELibrary(EBase):
 			if note.get_filename() == name: break
 		return note
 	def GetNoteByFile(self,file:Gio.File)->ENote|None:
-		note:ENote|None = None
 		for note in self.notes:
-			if note.file == file: break
-		return note
+			if note.file.equal(file): return note
+		return None
 	# Get Templates
 	def GetTemplates(self)->List[ETemplate]: return self.templates
 	def GetTemplateByName(self,name:str)->ETemplate:
