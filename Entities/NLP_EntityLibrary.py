@@ -184,10 +184,9 @@ class ELibrary(EBase):
 		name_enum,name,extension = template.generate_filename(self.metadata)
 		t_body:bytes = template.generate_contents(self.metadata) # the content produced from the template and mapping
 
-		note:ENote = None
 		if name_enum == FileNameEnum.MAKE_UNIQUE_NAME:
 			retval = self.CreateUniqueNote(name=name, extension=extension, contents=t_body)
-		elif name_enum == FileNameEnum.IMMUTABLE_NAME:
+		elif name_enum == FileNameEnum.PRESET_NAME:
 			retval = self.CreateNoteFile(name=name, extension=extension, contents=t_body)
 		elif name_enum == FileNameEnum.STARTSWITH_NAME:
 			retval = self.CreateNote_StartsWith(name=name, extension=extension ,contents=t_body)

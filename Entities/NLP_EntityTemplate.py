@@ -9,7 +9,7 @@ import re
 from enum import IntEnum,auto
 class FileNameEnum(IntEnum):
 	MAKE_UNIQUE_NAME = auto()
-	IMMUTABLE_NAME = auto()
+	PRESET_NAME = auto()
 	STARTSWITH_NAME = auto() # similar to static, but the name must start with the templated value. Nice for daily notes
 # from Entities.NLP_EntityLibrary import ELibrary
 from NLP_Template import NLP_Template
@@ -47,7 +47,7 @@ class ETemplate(EBase): # TODO check if the file has been updated (maybe this is
 		elif contents.startswith(self.startswith_filename_delimieter):
 			file_name_type = FileNameEnum.STARTSWITH_NAME
 		elif contents.startswith(self.normal_filename_delimieter):
-			file_name_type = FileNameEnum.IMMUTABLE_NAME
+			file_name_type = FileNameEnum.PRESET_NAME
 		else:
 			file_name_type = None
 		
