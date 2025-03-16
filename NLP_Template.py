@@ -22,8 +22,7 @@ def prepare_template_pattern(cls:Template)->bytes:
 		(?P<invalid>)             # Other ill-formed delimiter exprs
 	)
 	"""
-	return pattern.encode('utf-8') # we are using BYTES in this house.
-
+	return pattern.encode('utf-8')
 _sentinel_dict={}
 class NLP_Template(Template):
 	pattern = prepare_template_pattern(Template) # in Template.__init_subclass__ it will compile this string.
