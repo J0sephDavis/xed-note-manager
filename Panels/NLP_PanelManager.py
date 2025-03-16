@@ -50,16 +50,12 @@ class SidePanelManager():
 		self.panels.clear()
 		self.side_panel = None
 
-	def handle_note_focus_request(self, note:ENote, daily_note:bool=False):
-		print(f'{DEBUG_PREFIX} handle_note_focus_request')
-		if (daily_note):
-			panel:DailyNotePanel = self.getTab(DailyNotePanel.name)
-			panel.TryFocusNote(note)
-			self.side_panel.activate_item(panel) # switches to the tab
-		else:
-			panel:PanelTabBase = None
+	def focus_note(self, note:ENote, panel_name:str):
+		panel = self.getTab(panel_name)
+		if panel is None:
 			for panel in self.panels:
-				if (panel.TryFocusNote(note)):
+				if panel.TryFocusNote(note):
 					self.side_panel.activate_item(panel) # switches to the tab
-					return
-		print(f'{DEBUG_PREFIX} handle_note_focus_request no notes found')
+		else:
+			panel.TryFocusNote(note)		
+			self.side_panel.activate_item(panel)
